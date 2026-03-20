@@ -1,4 +1,4 @@
-use crate::state::{GameConfig, GameMode, Progress, Screen};
+use crate::state::{GameConfig, GameMode, Progress, Screen, PENALTY_SECONDS};
 use dioxus::prelude::*;
 
 fn format_time(secs: f64) -> String {
@@ -18,35 +18,33 @@ pub fn ModeSelectScreen(
     mut current_screen: Signal<Screen>,
     progress: Signal<Progress>,
 ) -> Element {
-    let cat_display = config
-        .category
-        .as_ref()
-        .map(|c| c.display_name())
-        .unwrap_or("All");
+    let cat_display = config.category_display_name();
+
+    let penalty = PENALTY_SECONDS as u32;
 
     rsx! {
         div { class: "screen category-screen",
-            // Header
             div { class: "screen-header",
                 button {
                     class: "back-btn",
                     onclick: {
-                        let language = config.language.clone();
+                        let subject = config.subject.clone();
                         move |_| {
-                            current_screen.set(Screen::CategorySelect { language: language.clone() });
+                            current_screen.set(Screen::CategorySelect { subject: subject.clone() });
                         }
                     },
                     "←"
                 }
                 h1 { class: "screen-title",
-                    "{config.language.flag()} {cat_display}"
+                    "{config.subject.flag()} {cat_display}"
                 }
             }
 
             div { class: "category-content",
-                h2 { class: "section-label", "Standard" }
+                h2 { class: "section-label", "Choose mode" }
+
                 div { class: "mode-grid",
-                    for mode in &[GameMode::Normal10, GameMode::Normal20] {
+                    for mode in &[GameMode::Words10, GameMode::Words20] {
                         {
                             let mode = *mode;
                             let mut cfg = config.clone();
@@ -69,29 +67,8 @@ pub fn ModeSelectScreen(
                     }
                 }
 
-                h2 { class: "section-label mode-section-gap", "Perfect (no mistakes)" }
-                div { class: "mode-grid",
-                    for mode in &[GameMode::Perfect10, GameMode::Perfect20] {
-                        {
-                            let mode = *mode;
-                            let mut cfg = config.clone();
-                            cfg.mode = mode;
-                            let best_key = cfg.best_time_key();
-                            let best = progress.read().get_best_time(&best_key);
-                            rsx! {
-                                ModeCard {
-                                    mode,
-                                    best_time: best,
-                                    on_select: {
-                                        let cfg = cfg.clone();
-                                        move |_| {
-                                            current_screen.set(Screen::Game { config: cfg.clone() });
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                div { class: "mode-hint",
+                    "+{penalty}s penalty per wrong answer"
                 }
             }
         }

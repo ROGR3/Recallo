@@ -1,6 +1,97 @@
-use crate::data::{Category, WORDS};
-use crate::state::{GameConfig, GameMode, Language, Progress, Screen};
+use crate::data::{Category, MathTopic, MATH_ENTRIES, WORDS};
+use crate::state::{GameConfig, GameMode, Progress, Screen, Subject};
 use dioxus::prelude::*;
+
+/// A unified category info item used for both Korean categories and Math topics.
+#[derive(Clone, PartialEq)]
+struct CategoryInfo {
+    key: String,
+    display_name: String,
+    emoji: String,
+}
+
+/// Get category info list for a given subject.
+fn categories_for_subject(subject: &Subject) -> Vec<CategoryInfo> {
+    match subject {
+        Subject::Korean => Category::all()
+            .iter()
+            .map(|c| CategoryInfo {
+                key: c.display_name().to_lowercase(),
+                display_name: c.display_name().to_string(),
+                emoji: c.emoji().to_string(),
+            })
+            .collect(),
+        Subject::MathAnalysis => MathTopic::all_for_subject(crate::data::MathSubject::Analysis)
+            .into_iter()
+            .map(|t| CategoryInfo {
+                key: t.key().to_string(),
+                display_name: t.display_name().to_string(),
+                emoji: t.emoji().to_string(),
+            })
+            .collect(),
+        Subject::MathDataScience => {
+            MathTopic::all_for_subject(crate::data::MathSubject::DataScience)
+                .into_iter()
+                .map(|t| CategoryInfo {
+                    key: t.key().to_string(),
+                    display_name: t.display_name().to_string(),
+                    emoji: t.emoji().to_string(),
+                })
+                .collect()
+        }
+    }
+}
+
+/// Count total entries for a subject, optionally filtered by category key.
+fn count_entries(subject: &Subject, category_key: Option<&str>) -> usize {
+    match subject {
+        Subject::Korean => WORDS
+            .iter()
+            .filter(|w| {
+                category_key
+                    .as_ref()
+                    .is_none_or(|k| w.category.display_name().to_lowercase() == *k)
+            })
+            .count(),
+        Subject::MathAnalysis => MATH_ENTRIES
+            .iter()
+            .filter(|e| e.subject == crate::data::MathSubject::Analysis)
+            .filter(|e| category_key.as_ref().is_none_or(|k| e.topic.key() == *k))
+            .count(),
+        Subject::MathDataScience => MATH_ENTRIES
+            .iter()
+            .filter(|e| e.subject == crate::data::MathSubject::DataScience)
+            .filter(|e| category_key.as_ref().is_none_or(|k| e.topic.key() == *k))
+            .count(),
+    }
+}
+
+/// Count known entries for a subject, optionally filtered by category key.
+fn count_known(subject: &Subject, category_key: Option<&str>, progress: &Progress) -> usize {
+    match subject {
+        Subject::Korean => WORDS
+            .iter()
+            .filter(|w| {
+                category_key
+                    .as_ref()
+                    .is_none_or(|k| w.category.display_name().to_lowercase() == *k)
+            })
+            .filter(|w| progress.is_known(w.korean))
+            .count(),
+        Subject::MathAnalysis => MATH_ENTRIES
+            .iter()
+            .filter(|e| e.subject == crate::data::MathSubject::Analysis)
+            .filter(|e| category_key.as_ref().is_none_or(|k| e.topic.key() == *k))
+            .filter(|e| progress.is_known(e.name))
+            .count(),
+        Subject::MathDataScience => MATH_ENTRIES
+            .iter()
+            .filter(|e| e.subject == crate::data::MathSubject::DataScience)
+            .filter(|e| category_key.as_ref().is_none_or(|k| e.topic.key() == *k))
+            .filter(|e| progress.is_known(e.name))
+            .count(),
+    }
+}
 
 #[derive(Clone, PartialEq)]
 struct FilterState {
@@ -10,33 +101,30 @@ struct FilterState {
 
 #[component]
 pub fn CategoryScreen(
-    language: Language,
+    subject: Subject,
     mut current_screen: Signal<Screen>,
     progress: Signal<Progress>,
 ) -> Element {
-    let mut selected_category: Signal<Option<Category>> = use_signal(|| None);
+    let mut selected_category: Signal<Option<String>> = use_signal(|| None);
     let mut filters = use_signal(|| FilterState {
         include_unknown: true,
         include_known: false,
     });
 
+    let categories = categories_for_subject(&subject);
+
     // Compute total/known/unknown for the selected category
+    let subject_for_count = subject.clone();
     let word_count = use_memo(move || {
         let cat = selected_category.read().clone();
-        WORDS
-            .iter()
-            .filter(|w| cat.as_ref().is_none_or(|c| &w.category == c))
-            .count()
+        count_entries(&subject_for_count, cat.as_deref())
     });
 
+    let subject_for_known = subject.clone();
     let known_count = use_memo(move || {
         let cat = selected_category.read().clone();
         let prog = progress.read();
-        WORDS
-            .iter()
-            .filter(|w| cat.as_ref().is_none_or(|c| &w.category == c))
-            .filter(|w| prog.is_known(w.korean))
-            .count()
+        count_known(&subject_for_known, cat.as_deref(), &prog)
     });
 
     let can_start = use_memo(move || word_count() >= 4);
@@ -51,7 +139,7 @@ pub fn CategoryScreen(
                     "←"
                 }
                 h1 { class: "screen-title",
-                    "{language.flag()} {language.display_name()}"
+                    "{subject.flag()} {subject.display_name()}"
                 }
             }
 
@@ -61,8 +149,8 @@ pub fn CategoryScreen(
                 div { class: "category-grid",
                     // "All" button
                     {
-                        let total = WORDS.len();
-                        let known = WORDS.iter().filter(|w| progress.read().is_known(w.korean)).count();
+                        let total = count_entries(&subject, None);
+                        let known = count_known(&subject, None, &progress.read());
                         rsx! {
                             button {
                                 class: if selected_category.read().is_none() {
@@ -77,20 +165,20 @@ pub fn CategoryScreen(
                             }
                         }
                     }
-                    for cat in Category::all() {
+                    for cat in categories.iter() {
                         {
                             let cat = cat.clone();
-                            let cat_for_click = cat.clone();
-                            let is_active = selected_category.read().as_ref() == Some(&cat);
-                            let cat_words: Vec<_> = WORDS.iter().filter(|w| w.category == cat).collect();
-                            let total = cat_words.len();
-                            let known = cat_words.iter().filter(|w| progress.read().is_known(w.korean)).count();
+                            let cat_key = cat.key.clone();
+                            let cat_key_for_click = cat.key.clone();
+                            let is_active = selected_category.read().as_ref() == Some(&cat.key);
+                            let total = count_entries(&subject, Some(&cat_key));
+                            let known = count_known(&subject, Some(&cat_key), &progress.read());
                             rsx! {
                                 button {
                                     class: if is_active { "category-btn category-btn--active" } else { "category-btn" },
-                                    onclick: move |_| selected_category.set(Some(cat_for_click.clone())),
-                                    span { class: "category-emoji", "{cat.emoji()}" }
-                                    span { class: "category-name", "{cat.display_name()}" }
+                                    onclick: move |_| selected_category.set(Some(cat_key_for_click.clone())),
+                                    span { class: "category-emoji", "{cat.emoji}" }
+                                    span { class: "category-name", "{cat.display_name}" }
                                     span { class: "category-count", "{known} / {total}" }
                                 }
                             }
@@ -176,11 +264,11 @@ pub fn CategoryScreen(
                     onclick: move |_| {
                         if can_start() {
                             let config = GameConfig {
-                                language: language.clone(),
+                                subject: subject.clone(),
                                 category: selected_category.read().clone(),
                                 include_unknown: filters.read().include_unknown,
                                 include_known: filters.read().include_known,
-                                mode: GameMode::Normal20,
+                                mode: GameMode::Words20,
                             };
                             current_screen.set(Screen::ModeSelect { config });
                         }

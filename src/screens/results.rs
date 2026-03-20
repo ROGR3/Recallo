@@ -20,25 +20,23 @@ pub fn ResultsScreen(result: GameResult, mut current_screen: Signal<Screen>) -> 
         0
     };
 
-    let grade = if result.failed_perfect {
-        ("💥", "Failed!", "grade--failed")
-    } else {
-        match pct {
-            90..=100 => ("🏆", "Excellent!", "grade--gold"),
-            70..=89 => ("⭐", "Great job!", "grade--silver"),
-            50..=69 => ("👍", "Good effort!", "grade--bronze"),
-            _ => ("💪", "Keep practicing!", "grade--default"),
-        }
+    let grade = match pct {
+        90..=100 => ("🏆", "Excellent!", "grade--gold"),
+        70..=89 => ("⭐", "Great job!", "grade--silver"),
+        50..=69 => ("👍", "Good effort!", "grade--bronze"),
+        _ => ("💪", "Keep practicing!", "grade--default"),
     };
 
     let time_str = format_time(result.time_seconds);
-    let cat_display = result
-        .config
-        .category
-        .as_ref()
-        .map(|c| c.display_name())
-        .unwrap_or("All");
+    let cat_display = result.config.category_display_name();
     let mode_name = result.config.mode.display_name();
+    let has_penalty = result.penalty_seconds > 0.0;
+    let penalty_str = format_time(result.penalty_seconds);
+    let mistakes_label = if result.mistakes == 1 {
+        "1 mistake".to_string()
+    } else {
+        format!("{} mistakes", result.mistakes)
+    };
 
     rsx! {
         div { class: "screen results-screen",
@@ -55,22 +53,26 @@ pub fn ResultsScreen(result: GameResult, mut current_screen: Signal<Screen>) -> 
                         "{result.score}"
                         span { class: "stat-total", " / {result.total}" }
                     }
-                    if !result.failed_perfect {
-                        span { class: "stat-pct", "{pct}%" }
-                    }
+                    span { class: "stat-pct", "{pct}%" }
                 }
 
                 div { class: "stat-card",
                     span { class: "stat-label", "Time" }
                     span { class: "stat-value", "{time_str}" }
-                    if result.failed_perfect {
-                        span { class: "stat-hint stat-hint--fail", "Not recorded (failed)" }
-                    } else if result.is_new_best {
-                        span { class: "best-badge", "🎉 New Best!" }
+                    if result.is_new_best {
+                        span { class: "best-badge", "New Best!" }
                     } else if let Some(pb) = result.previous_best {
                         span { class: "stat-hint",
                             "Best: {format_time(pb)}"
                         }
+                    }
+                }
+
+                if has_penalty {
+                    div { class: "stat-card stat-card--penalty",
+                        span { class: "stat-label", "Penalty" }
+                        span { class: "stat-value stat-value--penalty", "+{penalty_str}" }
+                        span { class: "stat-hint stat-hint--penalty", "{mistakes_label}" }
                     }
                 }
             }
@@ -84,7 +86,7 @@ pub fn ResultsScreen(result: GameResult, mut current_screen: Signal<Screen>) -> 
                             current_screen.set(Screen::Game { config: config.clone() });
                         }
                     },
-                    if result.failed_perfect { "Try Again" } else { "Play Again" }
+                    "Play Again"
                 }
                 button {
                     class: "secondary-btn",

@@ -1,3 +1,4 @@
+use crate::state::Theme;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
@@ -6,17 +7,19 @@ const SAVE_FILE: &str = "recallo_progress.json";
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Progress {
     pub known_words: HashSet<String>,
-    /// Key: "<language>:<category>" e.g. "korean:nouns"
+    /// Key: "<subject>:<category>:<mode>" e.g. "korean:nouns:10"
     pub best_times: HashMap<String, f64>,
+    #[serde(default)]
+    pub theme: Theme,
 }
 
 impl Progress {
-    pub fn is_known(&self, korean: &str) -> bool {
-        self.known_words.contains(korean)
+    pub fn is_known(&self, key: &str) -> bool {
+        self.known_words.contains(key)
     }
 
-    pub fn mark_known(&mut self, korean: &str) {
-        self.known_words.insert(korean.to_string());
+    pub fn mark_known(&mut self, key: &str) {
+        self.known_words.insert(key.to_string());
     }
 
     pub fn get_best_time(&self, key: &str) -> Option<f64> {

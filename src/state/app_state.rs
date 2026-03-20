@@ -1,112 +1,114 @@
-use crate::data::Category;
+use crate::data::{Category, MathTopic};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Screen {
     Home,
-    CategorySelect { language: Language },
+    Settings,
+    CategorySelect { subject: Subject },
     ModeSelect { config: GameConfig },
     Game { config: GameConfig },
     Results { result: GameResult },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum Language {
+pub enum Subject {
     Korean,
+    MathAnalysis,
+    MathDataScience,
 }
 
-impl Language {
+impl Subject {
     pub fn display_name(&self) -> &'static str {
         match self {
-            Language::Korean => "Korean",
+            Subject::Korean => "Korean",
+            Subject::MathAnalysis => "Math Analysis",
+            Subject::MathDataScience => "Math DataScience",
         }
     }
 
     pub fn flag(&self) -> &'static str {
         match self {
-            Language::Korean => "🇰🇷",
+            Subject::Korean => "🇰🇷",
+            Subject::MathAnalysis => "📐",
+            Subject::MathDataScience => "📊",
         }
     }
 
     pub fn native_name(&self) -> &'static str {
         match self {
-            Language::Korean => "한국어",
+            Subject::Korean => "한국어",
+            Subject::MathAnalysis => "Analýza",
+            Subject::MathDataScience => "Statistika",
         }
     }
 
     pub fn key(&self) -> &'static str {
         match self {
-            Language::Korean => "korean",
+            Subject::Korean => "korean",
+            Subject::MathAnalysis => "math_analysis",
+            Subject::MathDataScience => "math_datascience",
         }
+    }
+
+    pub fn is_math(&self) -> bool {
+        matches!(self, Subject::MathAnalysis | Subject::MathDataScience)
     }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum GameMode {
-    /// Standard 10 words — mistakes allowed
-    Normal10,
-    /// Standard 20 words — mistakes allowed
-    Normal20,
-    /// 10 words — game ends on first mistake
-    Perfect10,
-    /// 20 words — game ends on first mistake
-    Perfect20,
+    /// 10 words, +30s penalty per mistake
+    Words10,
+    /// 20 words, +30s penalty per mistake
+    Words20,
 }
 
 impl GameMode {
     pub fn word_count(&self) -> usize {
         match self {
-            GameMode::Normal10 | GameMode::Perfect10 => 10,
-            GameMode::Normal20 | GameMode::Perfect20 => 20,
+            GameMode::Words10 => 10,
+            GameMode::Words20 => 20,
         }
-    }
-
-    pub fn is_no_mistakes(&self) -> bool {
-        matches!(self, GameMode::Perfect10 | GameMode::Perfect20)
     }
 
     pub fn display_name(&self) -> &'static str {
         match self {
-            GameMode::Normal10 => "10 Words",
-            GameMode::Normal20 => "20 Words",
-            GameMode::Perfect10 => "10 Words (Perfect)",
-            GameMode::Perfect20 => "20 Words (Perfect)",
+            GameMode::Words10 => "10 Words",
+            GameMode::Words20 => "20 Words",
         }
     }
 
     pub fn subtitle(&self) -> &'static str {
         match self {
-            GameMode::Normal10 => "Quick round",
-            GameMode::Normal20 => "Standard round",
-            GameMode::Perfect10 => "No mistakes allowed",
-            GameMode::Perfect20 => "No mistakes allowed",
+            GameMode::Words10 => "Quick round",
+            GameMode::Words20 => "Standard round",
         }
     }
 
     pub fn emoji(&self) -> &'static str {
         match self {
-            GameMode::Normal10 => "⚡",
-            GameMode::Normal20 => "📝",
-            GameMode::Perfect10 => "💎",
-            GameMode::Perfect20 => "🔥",
+            GameMode::Words10 => "⚡",
+            GameMode::Words20 => "📝",
         }
     }
 
     pub fn key(&self) -> &'static str {
         match self {
-            GameMode::Normal10 => "normal10",
-            GameMode::Normal20 => "normal20",
-            GameMode::Perfect10 => "perfect10",
-            GameMode::Perfect20 => "perfect20",
+            GameMode::Words10 => "10",
+            GameMode::Words20 => "20",
         }
     }
 }
 
+/// Seconds added to the timer for each wrong answer
+pub const PENALTY_SECONDS: f64 = 30.0;
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct GameConfig {
-    pub language: Language,
-    /// None = "All categories"
-    pub category: Option<Category>,
+    pub subject: Subject,
+    /// None = "All categories"; Some(key) = specific category/topic key
+    pub category: Option<String>,
     pub include_unknown: bool,
     pub include_known: bool,
     pub mode: GameMode,
@@ -115,15 +117,43 @@ pub struct GameConfig {
 impl GameConfig {
     pub fn category_key(&self) -> String {
         match &self.category {
-            Some(c) => c.display_name().to_lowercase(),
+            Some(c) => c.clone(),
             None => "all".to_string(),
+        }
+    }
+
+    /// Resolve category key to a human-readable display name.
+    pub fn category_display_name(&self) -> String {
+        match &self.category {
+            None => "All".to_string(),
+            Some(key) => match &self.subject {
+                Subject::Korean => Category::all()
+                    .iter()
+                    .find(|c| c.display_name().to_lowercase() == *key)
+                    .map(|c| c.display_name().to_string())
+                    .unwrap_or_else(|| key.clone()),
+                Subject::MathAnalysis => {
+                    MathTopic::all_for_subject(crate::data::MathSubject::Analysis)
+                        .into_iter()
+                        .find(|t| t.key() == key)
+                        .map(|t| t.display_name().to_string())
+                        .unwrap_or_else(|| key.clone())
+                }
+                Subject::MathDataScience => {
+                    MathTopic::all_for_subject(crate::data::MathSubject::DataScience)
+                        .into_iter()
+                        .find(|t| t.key() == key)
+                        .map(|t| t.display_name().to_string())
+                        .unwrap_or_else(|| key.clone())
+                }
+            },
         }
     }
 
     pub fn best_time_key(&self) -> String {
         format!(
             "{}:{}:{}",
-            self.language.key(),
+            self.subject.key(),
             self.category_key(),
             self.mode.key()
         )
@@ -136,8 +166,34 @@ pub struct GameResult {
     pub score: usize,
     pub total: usize,
     pub time_seconds: f64,
+    pub penalty_seconds: f64,
+    pub mistakes: usize,
     pub is_new_best: bool,
     pub previous_best: Option<f64>,
-    /// true if game ended early due to a mistake in perfect mode
-    pub failed_perfect: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
+pub enum Theme {
+    #[default]
+    System,
+    Light,
+    Dark,
+}
+
+impl Theme {
+    pub fn css_class(&self) -> &'static str {
+        match self {
+            Theme::System => "",
+            Theme::Light => "theme-light",
+            Theme::Dark => "theme-dark",
+        }
+    }
+
+    pub fn display_name(&self) -> &'static str {
+        match self {
+            Theme::System => "System",
+            Theme::Light => "Light",
+            Theme::Dark => "Dark",
+        }
+    }
 }

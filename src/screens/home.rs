@@ -1,4 +1,4 @@
-use crate::state::{Language, Screen};
+use crate::state::{Screen, Subject};
 use crate::LOGO;
 use dioxus::prelude::*;
 
@@ -6,6 +6,16 @@ use dioxus::prelude::*;
 pub fn HomeScreen(mut current_screen: Signal<Screen>) -> Element {
     rsx! {
         div { class: "screen home-screen",
+            // Settings gear in top-right
+            div { class: "home-top-bar",
+                div {}
+                button {
+                    class: "settings-btn",
+                    onclick: move |_| current_screen.set(Screen::Settings),
+                    "⚙"
+                }
+            }
+
             div { class: "home-hero",
                 img { class: "app-logo-img", src: LOGO, alt: "Recallo logo" }
                 h1 { class: "app-title", "Recallo" }
@@ -13,12 +23,24 @@ pub fn HomeScreen(mut current_screen: Signal<Screen>) -> Element {
             }
 
             div { class: "language-section",
-                h2 { class: "section-label", "Select Language" }
+                h2 { class: "section-label", "Select Subject" }
                 div { class: "language-grid",
-                    LanguageTile {
-                        language: Language::Korean,
-                        on_select: move |lang| {
-                            current_screen.set(Screen::CategorySelect { language: lang });
+                    SubjectTile {
+                        subject: Subject::Korean,
+                        on_select: move |subj| {
+                            current_screen.set(Screen::CategorySelect { subject: subj });
+                        }
+                    }
+                    SubjectTile {
+                        subject: Subject::MathAnalysis,
+                        on_select: move |subj| {
+                            current_screen.set(Screen::CategorySelect { subject: subj });
+                        }
+                    }
+                    SubjectTile {
+                        subject: Subject::MathDataScience,
+                        on_select: move |subj| {
+                            current_screen.set(Screen::CategorySelect { subject: subj });
                         }
                     }
                 }
@@ -32,14 +54,14 @@ pub fn HomeScreen(mut current_screen: Signal<Screen>) -> Element {
 }
 
 #[component]
-fn LanguageTile(language: Language, on_select: EventHandler<Language>) -> Element {
+fn SubjectTile(subject: Subject, on_select: EventHandler<Subject>) -> Element {
     rsx! {
         button {
             class: "language-tile language-tile--active",
-            onclick: move |_| on_select.call(language.clone()),
-            span { class: "language-flag", "{language.flag()}" }
-            span { class: "language-name", "{language.display_name()}" }
-            span { class: "language-native", "{language.native_name()}" }
+            onclick: move |_| on_select.call(subject.clone()),
+            span { class: "language-flag", "{subject.flag()}" }
+            span { class: "language-name", "{subject.display_name()}" }
+            span { class: "language-native", "{subject.native_name()}" }
         }
     }
 }

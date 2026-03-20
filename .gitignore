@@ -16,6 +16,7 @@
 
 # Word dump (raw input, not part of the app)
 dump.txt
+temp_jsons/
 
 # OS
 .DS_Store
