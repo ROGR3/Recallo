@@ -1,0 +1,19 @@
+[application]
+name = "Recallo"
+default_platform = "android"
+out_dir = "dist"
+asset_dir = "assets"
+
+[web.app]
+title = "Recallo"
+
+[web.watcher]
+reload_html = true
+watch_path = ["src", "assets"]
+
+[android]
+package_name = "com.recallo.app"
+app_name = "Recallo"
+min_sdk_version = 24
+compile_sdk_version = 35
+target_sdk_version = 35

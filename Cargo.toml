@@ -1,0 +1,35 @@
+[package]
+name = "recallo"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "recallo"
+path = "src/main.rs"
+
+[dependencies]
+dioxus = { version = "0.7", features = ["mobile"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rand = "0.8"
+
+[target.'cfg(target_os = "android")'.dependencies]
+ndk-context = "0.1"
+jni = { version = "0.21", default-features = false }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+gloo-timers = { version = "0.3", features = ["futures"] }
+js-sys = "0.3"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+async-std = { version = "1", features = ["attributes"] }
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+strip = true
+
+[profile.dev]
+opt-level = 0
+debug = true
