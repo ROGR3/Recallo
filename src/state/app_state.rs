@@ -1,5 +1,5 @@
-use crate::data::{Category, MathTopic};
 use crate::data::units;
+use crate::data::{Category, MathTopic};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -10,6 +10,7 @@ pub enum Screen {
     ModeSelect { config: GameConfig },
     Game { config: GameConfig },
     Results { result: GameResult },
+    KnownWords { subject: Subject },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]

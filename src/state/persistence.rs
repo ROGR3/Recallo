@@ -22,6 +22,10 @@ impl Progress {
         self.known_words.insert(key.to_string());
     }
 
+    pub fn unmark_known(&mut self, key: &str) {
+        self.known_words.remove(key);
+    }
+
     pub fn get_best_time(&self, key: &str) -> Option<f64> {
         self.best_times.get(key).copied()
     }

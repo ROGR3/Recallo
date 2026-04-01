@@ -4,7 +4,8 @@ mod state;
 
 use dioxus::prelude::*;
 use screens::{
-    CategoryScreen, GameScreen, HomeScreen, ModeSelectScreen, ResultsScreen, SettingsScreen,
+    CategoryScreen, GameScreen, HomeScreen, KnownWordsScreen, ModeSelectScreen, ResultsScreen,
+    SettingsScreen,
 };
 use state::{load_progress, Progress, Screen};
 
@@ -113,6 +114,14 @@ fn App() -> Element {
                         result,
                         current_screen,
                         history,
+                    }
+                },
+                Screen::KnownWords { subject } => rsx! {
+                    KnownWordsScreen {
+                        subject,
+                        current_screen,
+                        history,
+                        progress,
                     }
                 },
             }

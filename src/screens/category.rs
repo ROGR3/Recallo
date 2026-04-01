@@ -138,7 +138,11 @@ pub fn CategoryScreen(
         include_known: false,
     });
     let mut view_mode = use_signal(|| {
-        if subject == Subject::Korean { ViewMode::BySection } else { ViewMode::ByType }
+        if subject == Subject::Korean {
+            ViewMode::BySection
+        } else {
+            ViewMode::ByType
+        }
     });
 
     let categories = categories_for_subject(&subject);
@@ -247,14 +251,28 @@ pub fn CategoryScreen(
                     let known = known_count();
                     let unknown = total - known;
                     let pct = if total > 0 { known * 100 / total } else { 0 };
+                    let subject_for_nav = subject.clone();
                     rsx! {
                         div { class: "mastery-summary",
                             div { class: "mastery-bar-container",
                                 div { class: "mastery-bar-fill", style: "width: {pct}%" }
                             }
                             div { class: "mastery-stats",
-                                span { class: "mastery-stat mastery-stat--known", "✓ {known} mastered" }
+                                span { class: "mastery-stat mastery-stat--known", "\u{2713} {known} mastered" }
                                 span { class: "mastery-stat mastery-stat--unknown", "{unknown} to learn" }
+                            }
+                            if known > 0 {
+                                button {
+                                    class: "mastery-view-btn",
+                                    onclick: move |_| {
+                                        navigate(
+                                            &mut current_screen,
+                                            &mut history,
+                                            Screen::KnownWords { subject: subject_for_nav.clone() },
+                                        );
+                                    },
+                                    "View mastered \u{2192}"
+                                }
                             }
                         }
                     }
