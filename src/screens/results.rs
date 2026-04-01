@@ -13,7 +13,11 @@ fn format_time(secs: f64) -> String {
 }
 
 #[component]
-pub fn ResultsScreen(result: GameResult, mut current_screen: Signal<Screen>) -> Element {
+pub fn ResultsScreen(
+    result: GameResult,
+    mut current_screen: Signal<Screen>,
+    mut history: Signal<Vec<Screen>>,
+) -> Element {
     let pct = if result.total > 0 {
         (result.score as f64 / result.total as f64 * 100.0) as u32
     } else {

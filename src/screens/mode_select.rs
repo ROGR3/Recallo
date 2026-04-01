@@ -12,10 +12,28 @@ fn format_time(secs: f64) -> String {
     }
 }
 
+fn navigate(
+    current_screen: &mut Signal<Screen>,
+    history: &mut Signal<Vec<Screen>>,
+    target: Screen,
+) {
+    history.write().push(current_screen.read().clone());
+    current_screen.set(target);
+}
+
+fn go_back(current_screen: &mut Signal<Screen>, history: &mut Signal<Vec<Screen>>) {
+    if let Some(prev) = history.write().pop() {
+        current_screen.set(prev);
+    } else {
+        current_screen.set(Screen::Home);
+    }
+}
+
 #[component]
 pub fn ModeSelectScreen(
     config: GameConfig,
     mut current_screen: Signal<Screen>,
+    mut history: Signal<Vec<Screen>>,
     progress: Signal<Progress>,
 ) -> Element {
     let cat_display = config.category_display_name();
@@ -27,12 +45,7 @@ pub fn ModeSelectScreen(
             div { class: "screen-header",
                 button {
                     class: "back-btn",
-                    onclick: {
-                        let subject = config.subject.clone();
-                        move |_| {
-                            current_screen.set(Screen::CategorySelect { subject: subject.clone() });
-                        }
-                    },
+                    onclick: move |_| go_back(&mut current_screen, &mut history),
                     "←"
                 }
                 h1 { class: "screen-title",
@@ -58,7 +71,7 @@ pub fn ModeSelectScreen(
                                     on_select: {
                                         let cfg = cfg.clone();
                                         move |_| {
-                                            current_screen.set(Screen::Game { config: cfg.clone() });
+                                            navigate(&mut current_screen, &mut history, Screen::Game { config: cfg.clone() });
                                         }
                                     }
                                 }

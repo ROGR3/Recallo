@@ -1,20 +1,28 @@
 use crate::state::{Progress, Screen, Theme};
 use dioxus::prelude::*;
 
+fn go_back(current_screen: &mut Signal<Screen>, history: &mut Signal<Vec<Screen>>) {
+    if let Some(prev) = history.write().pop() {
+        current_screen.set(prev);
+    } else {
+        current_screen.set(Screen::Home);
+    }
+}
+
 #[component]
 pub fn SettingsScreen(
     mut current_screen: Signal<Screen>,
+    mut history: Signal<Vec<Screen>>,
     mut progress: Signal<Progress>,
 ) -> Element {
     let current_theme = progress.read().theme;
 
     rsx! {
         div { class: "screen category-screen",
-            // Header
             div { class: "screen-header",
                 button {
                     class: "back-btn",
-                    onclick: move |_| current_screen.set(Screen::Home),
+                    onclick: move |_| go_back(&mut current_screen, &mut history),
                     "←"
                 }
                 h1 { class: "screen-title", "Settings" }

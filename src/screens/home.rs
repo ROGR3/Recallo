@@ -2,16 +2,25 @@ use crate::state::{Screen, Subject};
 use crate::LOGO;
 use dioxus::prelude::*;
 
+/// Push current screen to history, then navigate to new screen
+fn navigate(
+    current_screen: &mut Signal<Screen>,
+    history: &mut Signal<Vec<Screen>>,
+    target: Screen,
+) {
+    history.write().push(current_screen.read().clone());
+    current_screen.set(target);
+}
+
 #[component]
-pub fn HomeScreen(mut current_screen: Signal<Screen>) -> Element {
+pub fn HomeScreen(mut current_screen: Signal<Screen>, mut history: Signal<Vec<Screen>>) -> Element {
     rsx! {
         div { class: "screen home-screen",
-            // Settings gear in top-right
             div { class: "home-top-bar",
                 div {}
                 button {
                     class: "settings-btn",
-                    onclick: move |_| current_screen.set(Screen::Settings),
+                    onclick: move |_| navigate(&mut current_screen, &mut history, Screen::Settings),
                     "⚙"
                 }
             }
@@ -28,19 +37,19 @@ pub fn HomeScreen(mut current_screen: Signal<Screen>) -> Element {
                     SubjectTile {
                         subject: Subject::Korean,
                         on_select: move |subj| {
-                            current_screen.set(Screen::CategorySelect { subject: subj });
+                            navigate(&mut current_screen, &mut history, Screen::CategorySelect { subject: subj });
                         }
                     }
                     SubjectTile {
                         subject: Subject::MathAnalysis,
                         on_select: move |subj| {
-                            current_screen.set(Screen::CategorySelect { subject: subj });
+                            navigate(&mut current_screen, &mut history, Screen::CategorySelect { subject: subj });
                         }
                     }
                     SubjectTile {
                         subject: Subject::MathDataScience,
                         on_select: move |subj| {
-                            current_screen.set(Screen::CategorySelect { subject: subj });
+                            navigate(&mut current_screen, &mut history, Screen::CategorySelect { subject: subj });
                         }
                     }
                 }

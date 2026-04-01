@@ -234,6 +234,7 @@ fn go_to_results(
     q_count: usize,
     progress: &mut Signal<Progress>,
     current_screen: &mut Signal<Screen>,
+    history: &mut Signal<Vec<Screen>>,
 ) {
     let total_time = final_secs + penalty_secs;
     let key = config.best_time_key();
@@ -250,6 +251,8 @@ fn go_to_results(
         is_new_best,
         previous_best: prev_best,
     };
+    // Clear history — from results you use explicit buttons, not back
+    history.write().clear();
     current_screen.set(Screen::Results { result });
 }
 
@@ -257,6 +260,7 @@ fn go_to_results(
 pub fn GameScreen(
     config: GameConfig,
     mut current_screen: Signal<Screen>,
+    mut history: Signal<Vec<Screen>>,
     mut progress: Signal<Progress>,
 ) -> Element {
     let questions: Signal<Vec<Question>> = use_signal({
@@ -308,7 +312,7 @@ pub fn GameScreen(
                 div { class: "screen-header",
                     button {
                         class: "back-btn",
-                        onclick: move |_| current_screen.set(Screen::Home),
+                        onclick: move |_| { history.write().clear(); current_screen.set(Screen::Home); },
                         "←"
                     }
                     h1 { class: "screen-title", "No words" }
@@ -318,7 +322,7 @@ pub fn GameScreen(
                     p { "Try changing the category or filters." }
                     button {
                         class: "start-btn",
-                        onclick: move |_| current_screen.set(Screen::Home),
+                        onclick: move |_| { history.write().clear(); current_screen.set(Screen::Home); },
                         "Back to Home"
                     }
                 }
@@ -352,7 +356,7 @@ pub fn GameScreen(
             div { class: "game-header",
                 button {
                     class: "back-btn",
-                    onclick: move |_| current_screen.set(Screen::Home),
+                    onclick: move |_| { history.write().clear(); current_screen.set(Screen::Home); },
                     "✕"
                 }
                 div { class: "progress-info",
@@ -572,7 +576,7 @@ pub fn GameScreen(
                                         let penalty = *penalty_total.read();
                                         let final_score = *score.read();
                                         let mistake_count = *mistakes.read();
-                                        go_to_results(&config_for_results, final_secs, penalty, final_score, mistake_count, q_count, &mut progress, &mut current_screen);
+                                        go_to_results(&config_for_results, final_secs, penalty, final_score, mistake_count, q_count, &mut progress, &mut current_screen, &mut history);
                                     } else {
                                         question_index += 1;
                                         answer_state.set(AnswerState::Waiting);

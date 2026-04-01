@@ -93,6 +93,23 @@ fn count_known(subject: &Subject, category_key: Option<&str>, progress: &Progres
     }
 }
 
+fn navigate(
+    current_screen: &mut Signal<Screen>,
+    history: &mut Signal<Vec<Screen>>,
+    target: Screen,
+) {
+    history.write().push(current_screen.read().clone());
+    current_screen.set(target);
+}
+
+fn go_back(current_screen: &mut Signal<Screen>, history: &mut Signal<Vec<Screen>>) {
+    if let Some(prev) = history.write().pop() {
+        current_screen.set(prev);
+    } else {
+        current_screen.set(Screen::Home);
+    }
+}
+
 #[derive(Clone, PartialEq)]
 struct FilterState {
     include_unknown: bool,
@@ -103,6 +120,7 @@ struct FilterState {
 pub fn CategoryScreen(
     subject: Subject,
     mut current_screen: Signal<Screen>,
+    mut history: Signal<Vec<Screen>>,
     progress: Signal<Progress>,
 ) -> Element {
     let mut selected_category: Signal<Option<String>> = use_signal(|| None);
@@ -135,7 +153,7 @@ pub fn CategoryScreen(
             div { class: "screen-header",
                 button {
                     class: "back-btn",
-                    onclick: move |_| current_screen.set(Screen::Home),
+                    onclick: move |_| go_back(&mut current_screen, &mut history),
                     "←"
                 }
                 h1 { class: "screen-title",
@@ -270,7 +288,7 @@ pub fn CategoryScreen(
                                 include_known: filters.read().include_known,
                                 mode: GameMode::Words20,
                             };
-                            current_screen.set(Screen::ModeSelect { config });
+                            navigate(&mut current_screen, &mut history, Screen::ModeSelect { config });
                         }
                     },
                     "Choose Mode  →"
