@@ -311,6 +311,11 @@ pub static WORDS: &[Word] = &[
         english: "milk",
         category: Category::Food,
     },
+    Word {
+        korean: "삼계탕",
+        english: "samgyetang (ginseng chicken soup)",
+        category: Category::Food,
+    },
     // ── LOANWORDS ─────────────────────────────────────────────────────────────
     Word {
         korean: "캐릭터",
@@ -535,6 +540,16 @@ pub static WORDS: &[Word] = &[
     Word {
         korean: "파티",
         english: "party",
+        category: Category::Loanword,
+    },
+    Word {
+        korean: "체크인",
+        english: "check-in",
+        category: Category::Loanword,
+    },
+    Word {
+        korean: "올림픽",
+        english: "Olympics",
         category: Category::Loanword,
     },
     // ── NOUNS ─────────────────────────────────────────────────────────────────
@@ -1788,6 +1803,161 @@ pub static WORDS: &[Word] = &[
         english: "Mr./Ms./suffix for names",
         category: Category::Noun,
     },
+    Word {
+        korean: "하늘",
+        english: "sky",
+        category: Category::Noun,
+    },
+    Word {
+        korean: "감기",
+        english: "cold (illness)",
+        category: Category::Noun,
+    },
+    Word {
+        korean: "겨울",
+        english: "winter",
+        category: Category::Noun,
+    },
+    Word {
+        korean: "동물",
+        english: "animal",
+        category: Category::Noun,
+    },
+    Word {
+        korean: "작년",
+        english: "last year",
+        category: Category::Noun,
+    },
+    Word {
+        korean: "가을",
+        english: "autumn",
+        category: Category::Noun,
+    },
+    Word {
+        korean: "오후",
+        english: "afternoon",
+        category: Category::Noun,
+    },
+    Word {
+        korean: "우산",
+        english: "umbrella",
+        category: Category::Noun,
+    },
+    Word {
+        korean: "바람",
+        english: "wind",
+        category: Category::Noun,
+    },
+    Word {
+        korean: "올해",
+        english: "this year",
+        category: Category::Noun,
+    },
+    Word {
+        korean: "어제",
+        english: "yesterday",
+        category: Category::Noun,
+    },
+    Word {
+        korean: "단어",
+        english: "word",
+        category: Category::Noun,
+    },
+    Word {
+        korean: "연필",
+        english: "pencil",
+        category: Category::Noun,
+    },
+    Word {
+        korean: "필통",
+        english: "pencil case",
+        category: Category::Noun,
+    },
+    Word {
+        korean: "안경",
+        english: "glasses",
+        category: Category::Noun,
+    },
+    Word {
+        korean: "것",
+        english: "thing",
+        category: Category::Noun,
+    },
+    Word {
+        korean: "건물",
+        english: "building",
+        category: Category::Noun,
+    },
+    Word {
+        korean: "의자",
+        english: "chair",
+        category: Category::Noun,
+    },
+    Word {
+        korean: "공책",
+        english: "notebook",
+        category: Category::Noun,
+    },
+    Word {
+        korean: "색",
+        english: "color",
+        category: Category::Noun,
+    },
+    Word {
+        korean: "외국어",
+        english: "foreign language",
+        category: Category::Noun,
+    },
+    Word {
+        korean: "시험",
+        english: "exam",
+        category: Category::Noun,
+    },
+    Word {
+        korean: "출발",
+        english: "departure",
+        category: Category::Noun,
+    },
+    Word {
+        korean: "인도네시아",
+        english: "Indonesia",
+        category: Category::Noun,
+    },
+    Word {
+        korean: "탁구",
+        english: "table tennis",
+        category: Category::Noun,
+    },
+    Word {
+        korean: "일본",
+        english: "Japan",
+        category: Category::Noun,
+    },
+    Word {
+        korean: "농구",
+        english: "basketball",
+        category: Category::Noun,
+    },
+    Word {
+        korean: "연습",
+        english: "practice",
+        category: Category::Noun,
+    },
+    Word {
+        korean: "달리기",
+        english: "running",
+        category: Category::Noun,
+    },
+    Word {
+        korean: "이번",
+        english: "this time",
+        category: Category::Noun,
+    },
+    Word {
+        korean: "프랑스",
+        english: "France",
+        category: Category::Noun,
+    },
     // ── VERBS ─────────────────────────────────────────────────────────────────
     Word {
         korean: "끄다",
@@ -2184,6 +2354,36 @@ pub static WORDS: &[Word] = &[
         english: "to break down",
         category: Category::Verb,
     },
+    Word {
+        korean: "걸리다",
+        english: "to take (time) / to catch (a cold)",
+        category: Category::Verb,
+    },
+    Word {
+        korean: "내리다",
+        english: "to fall / come down",
+        category: Category::Verb,
+    },
+    Word {
+        korean: "보이다",
+        english: "to be visible / look",
+        category: Category::Verb,
+    },
+    Word {
+        korean: "불다",
+        english: "to blow",
+        category: Category::Verb,
+    },
+    Word {
+        korean: "말하다",
+        english: "to speak",
+        category: Category::Verb,
+    },
+    Word {
+        korean: "끝나다",
+        english: "to end",
+        category: Category::Verb,
+    },
     // ── ADJECTIVES ────────────────────────────────────────────────────────────
     Word {
         korean: "기쁘다",
@@ -2425,6 +2625,16 @@ pub static WORDS: &[Word] = &[
         english: "close (friendship modifier)",
         category: Category::Adjective,
     },
+    Word {
+        korean: "궁금하다",
+        english: "to be curious",
+        category: Category::Adjective,
+    },
+    Word {
+        korean: "빠르다",
+        english: "to be fast",
+        category: Category::Adjective,
+    },
     // ── ADVERBS ───────────────────────────────────────────────────────────────
     Word {
         korean: "벌써",
@@ -2579,6 +2789,26 @@ pub static WORDS: &[Word] = &[
     Word {
         korean: "이제",
         english: "from now on",
+        category: Category::Adverb,
+    },
+    Word {
+        korean: "요즘",
+        english: "these days",
+        category: Category::Adverb,
+    },
+    Word {
+        korean: "덜",
+        english: "less",
+        category: Category::Adverb,
+    },
+    Word {
+        korean: "더",
+        english: "more",
+        category: Category::Adverb,
+    },
+    Word {
+        korean: "지금",
+        english: "now",
         category: Category::Adverb,
     },
     // ── EXPRESSIONS ───────────────────────────────────────────────────────────
@@ -3001,6 +3231,46 @@ pub static WORDS: &[Word] = &[
     Word {
         korean: "단",
         english: "sweet / but (conditional)",
+        category: Category::Grammar,
+    },
+    Word {
+        korean: "어느",
+        english: "which",
+        category: Category::Grammar,
+    },
+    Word {
+        korean: "일",
+        english: "one / first",
+        category: Category::Grammar,
+    },
+    Word {
+        korean: "넷",
+        english: "four",
+        category: Category::Grammar,
+    },
+    Word {
+        korean: "열둘",
+        english: "twelve",
+        category: Category::Grammar,
+    },
+    Word {
+        korean: "둘",
+        english: "two",
+        category: Category::Grammar,
+    },
+    Word {
+        korean: "반",
+        english: "half / thirty (minutes)",
+        category: Category::Grammar,
+    },
+    Word {
+        korean: "열",
+        english: "ten",
+        category: Category::Grammar,
+    },
+    Word {
+        korean: "시",
+        english: "o'clock",
         category: Category::Grammar,
     },
 ];
