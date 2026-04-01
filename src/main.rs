@@ -20,61 +20,49 @@ fn App() -> Element {
     let mut current_screen: Signal<Screen> = use_signal(|| Screen::Home);
     let progress: Signal<Progress> = use_signal(load_progress);
     let mut history: Signal<Vec<Screen>> = use_signal(Vec::new);
-    // Flag to distinguish back-navigation from forward-navigation
-    let mut is_back_nav: Signal<bool> = use_signal(|| false);
 
-    // Whenever screen changes (forward navigation), push browser history state
+    // Install a persistent popstate listener once, and poll for back-button
+    // events in a loop. Each popstate increments a JS counter; the Rust side
+    // compares its own counter and pops the app history stack when they diverge.
     use_effect(move || {
-        // Subscribe to screen changes
-        let _screen = current_screen.read().clone();
-        // If this was triggered by a back-nav, don't push
-        if *is_back_nav.peek() {
-            is_back_nav.set(false);
-            return;
-        }
-        // Push a browser history entry so Android back button triggers popstate
         spawn(async move {
+            // One-time setup: install the persistent listener and seed browser
+            // history with one entry so the very first back press fires popstate
+            // instead of closing the WebView.
             _ = document::eval(r#"
-                if (window.__recallo_history_depth === undefined) {
-                    window.__recallo_history_depth = 0;
-                }
-                window.__recallo_history_depth++;
-                history.pushState({depth: window.__recallo_history_depth}, '');
-            "#);
-        });
-    });
-
-    // Listen for popstate (Android back button) and navigate back
-    use_effect(move || {
-        spawn(async move {
-            // Set up the popstate listener once
-            let mut eval = document::eval(r#"
-                // Return a promise that resolves each time popstate fires
-                await new Promise((resolve) => {
-                    window.addEventListener('popstate', function handler(e) {
-                        resolve('back');
-                        window.removeEventListener('popstate', handler);
-                    });
+                window.__recallo_back_count = 0;
+                window.addEventListener('popstate', function(_e) {
+                    window.__recallo_back_count++;
+                    // Re-push so there is always a history entry to pop
+                    history.pushState(null, '');
                 });
+                // Seed initial history entry
+                history.pushState(null, '');
             "#);
+
+            let mut seen: i64 = 0;
+
             loop {
-                if let Ok(_val) = eval.recv::<String>().await {
-                    let hist = history.read().clone();
-                    if let Some(prev_screen) = hist.last().cloned() {
-                        // Pop history and go back
-                        history.write().pop();
-                        is_back_nav.set(true);
-                        current_screen.set(prev_screen);
+                // Short sleep to avoid busy-looping — 100 ms is responsive enough
+                #[cfg(not(target_arch = "wasm32"))]
+                async_std::task::sleep(std::time::Duration::from_millis(100)).await;
+                #[cfg(target_arch = "wasm32")]
+                gloo_timers::future::sleep(std::time::Duration::from_millis(100)).await;
+
+                // Read the JS counter
+                let mut eval = document::eval(r#"
+                    dioxus.send(window.__recallo_back_count || 0);
+                "#);
+                if let Ok(count) = eval.recv::<i64>().await {
+                    while seen < count {
+                        seen += 1;
+                        // Navigate back in app history
+                        if let Some(prev) = history.write().pop() {
+                            current_screen.set(prev);
+                        }
+                        // If history is empty we're at Home — let Android
+                        // handle the next back press (it will close the app).
                     }
-                    // Re-register listener for next back press
-                    eval = document::eval(r#"
-                        await new Promise((resolve) => {
-                            window.addEventListener('popstate', function handler(e) {
-                                resolve('back');
-                                window.removeEventListener('popstate', handler);
-                            });
-                        });
-                    "#);
                 }
             }
         });
