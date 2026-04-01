@@ -2,6 +2,7 @@ use dioxus::prelude::*;
 use rand::seq::SliceRandom;
 use rand::Rng;
 use crate::data::{Word, WORDS, MathEntry, MATH_ENTRIES};
+use crate::data::units;
 use crate::state::{GameConfig, GameResult, Progress, Screen, Subject, PENALTY_SECONDS};
 
 const CHOICES: usize = 4;
@@ -54,7 +55,14 @@ fn build_korean_questions(config: &GameConfig, progress: &Progress) -> Vec<Quest
 
     let cat_key = config.category.as_deref();
     let pool: Vec<&'static Word> = WORDS.iter().filter(|w| {
-        let cat_ok = cat_key.is_none_or(|k| w.category.display_name().to_lowercase() == k);
+        let cat_ok = match cat_key {
+            None => true,
+            Some(k) if units::parse_unit_key(k).is_some() => {
+                let (sec, unit) = units::parse_unit_key(k).unwrap();
+                units::word_unit(w.korean) == Some((sec, unit))
+            }
+            Some(k) => w.category.display_name().to_lowercase() == k,
+        };
         if !cat_ok { return false; }
         let is_known = progress.is_known(w.korean);
         match (config.include_unknown, config.include_known) {

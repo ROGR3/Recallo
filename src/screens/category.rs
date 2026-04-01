@@ -1,8 +1,8 @@
+use crate::data::units;
 use crate::data::{Category, MathTopic, MATH_ENTRIES, WORDS};
 use crate::state::{GameConfig, GameMode, Progress, Screen, Subject};
 use dioxus::prelude::*;
 
-/// A unified category info item used for both Korean categories and Math topics.
 #[derive(Clone, PartialEq)]
 struct CategoryInfo {
     key: String,
@@ -10,7 +10,6 @@ struct CategoryInfo {
     emoji: String,
 }
 
-/// Get category info list for a given subject.
 fn categories_for_subject(subject: &Subject) -> Vec<CategoryInfo> {
     match subject {
         Subject::Korean => Category::all()
@@ -42,15 +41,17 @@ fn categories_for_subject(subject: &Subject) -> Vec<CategoryInfo> {
     }
 }
 
-/// Count total entries for a subject, optionally filtered by category key.
 fn count_entries(subject: &Subject, category_key: Option<&str>) -> usize {
     match subject {
         Subject::Korean => WORDS
             .iter()
-            .filter(|w| {
-                category_key
-                    .as_ref()
-                    .is_none_or(|k| w.category.display_name().to_lowercase() == *k)
+            .filter(|w| match category_key {
+                None => true,
+                Some(k) if units::parse_unit_key(k).is_some() => {
+                    let (sec, unit) = units::parse_unit_key(k).unwrap();
+                    units::word_unit(w.korean) == Some((sec, unit))
+                }
+                Some(k) => w.category.display_name().to_lowercase() == *k,
             })
             .count(),
         Subject::MathAnalysis => MATH_ENTRIES
@@ -66,15 +67,17 @@ fn count_entries(subject: &Subject, category_key: Option<&str>) -> usize {
     }
 }
 
-/// Count known entries for a subject, optionally filtered by category key.
 fn count_known(subject: &Subject, category_key: Option<&str>, progress: &Progress) -> usize {
     match subject {
         Subject::Korean => WORDS
             .iter()
-            .filter(|w| {
-                category_key
-                    .as_ref()
-                    .is_none_or(|k| w.category.display_name().to_lowercase() == *k)
+            .filter(|w| match category_key {
+                None => true,
+                Some(k) if units::parse_unit_key(k).is_some() => {
+                    let (sec, unit) = units::parse_unit_key(k).unwrap();
+                    units::word_unit(w.korean) == Some((sec, unit))
+                }
+                Some(k) => w.category.display_name().to_lowercase() == *k,
             })
             .filter(|w| progress.is_known(w.korean))
             .count(),
@@ -110,6 +113,12 @@ fn go_back(current_screen: &mut Signal<Screen>, history: &mut Signal<Vec<Screen>
     }
 }
 
+#[derive(Clone, Copy, PartialEq)]
+enum ViewMode {
+    ByType,
+    BySection,
+}
+
 #[derive(Clone, PartialEq)]
 struct FilterState {
     include_unknown: bool,
@@ -128,10 +137,13 @@ pub fn CategoryScreen(
         include_unknown: true,
         include_known: false,
     });
+    let mut view_mode = use_signal(|| {
+        if subject == Subject::Korean { ViewMode::BySection } else { ViewMode::ByType }
+    });
 
     let categories = categories_for_subject(&subject);
+    let is_korean = subject == Subject::Korean;
 
-    // Compute total/known/unknown for the selected category
     let subject_for_count = subject.clone();
     let word_count = use_memo(move || {
         let cat = selected_category.read().clone();
@@ -149,7 +161,6 @@ pub fn CategoryScreen(
 
     rsx! {
         div { class: "screen category-screen",
-            // Header
             div { class: "screen-header",
                 button {
                     class: "back-btn",
@@ -162,49 +173,75 @@ pub fn CategoryScreen(
             }
 
             div { class: "category-content",
-                // Category picker
-                h2 { class: "section-label", "Category" }
-                div { class: "category-grid",
-                    // "All" button
-                    {
-                        let total = count_entries(&subject, None);
-                        let known = count_known(&subject, None, &progress.read());
-                        rsx! {
-                            button {
-                                class: if selected_category.read().is_none() {
-                                    "category-btn category-btn--active"
-                                } else {
-                                    "category-btn"
-                                },
-                                onclick: move |_| selected_category.set(None),
-                                span { class: "category-emoji", "🌟" }
-                                span { class: "category-name", "All" }
-                                span { class: "category-count", "{known} / {total}" }
-                            }
+                // View mode toggle (Korean only)
+                if is_korean {
+                    div { class: "view-toggle",
+                        button {
+                            class: if *view_mode.read() == ViewMode::ByType { "view-toggle-btn view-toggle-btn--active" } else { "view-toggle-btn" },
+                            onclick: move |_| {
+                                view_mode.set(ViewMode::ByType);
+                                selected_category.set(None);
+                            },
+                            "By Type"
+                        }
+                        button {
+                            class: if *view_mode.read() == ViewMode::BySection { "view-toggle-btn view-toggle-btn--active" } else { "view-toggle-btn" },
+                            onclick: move |_| {
+                                view_mode.set(ViewMode::BySection);
+                                selected_category.set(None);
+                            },
+                            "By Section"
                         }
                     }
-                    for cat in categories.iter() {
+                }
+
+                if *view_mode.read() == ViewMode::BySection && is_korean {
+                    // Section/Unit view
+                    {render_section_view(&subject, selected_category, progress)}
+                } else {
+                    // Type-based view (original)
+                    h2 { class: "section-label", "Category" }
+                    div { class: "category-grid",
                         {
-                            let cat = cat.clone();
-                            let cat_key = cat.key.clone();
-                            let cat_key_for_click = cat.key.clone();
-                            let is_active = selected_category.read().as_ref() == Some(&cat.key);
-                            let total = count_entries(&subject, Some(&cat_key));
-                            let known = count_known(&subject, Some(&cat_key), &progress.read());
+                            let total = count_entries(&subject, None);
+                            let known = count_known(&subject, None, &progress.read());
                             rsx! {
                                 button {
-                                    class: if is_active { "category-btn category-btn--active" } else { "category-btn" },
-                                    onclick: move |_| selected_category.set(Some(cat_key_for_click.clone())),
-                                    span { class: "category-emoji", "{cat.emoji}" }
-                                    span { class: "category-name", "{cat.display_name}" }
+                                    class: if selected_category.read().is_none() {
+                                        "category-btn category-btn--active"
+                                    } else {
+                                        "category-btn"
+                                    },
+                                    onclick: move |_| selected_category.set(None),
+                                    span { class: "category-emoji", "🌟" }
+                                    span { class: "category-name", "All" }
                                     span { class: "category-count", "{known} / {total}" }
+                                }
+                            }
+                        }
+                        for cat in categories.iter() {
+                            {
+                                let cat = cat.clone();
+                                let cat_key = cat.key.clone();
+                                let cat_key_for_click = cat.key.clone();
+                                let is_active = selected_category.read().as_ref() == Some(&cat.key);
+                                let total = count_entries(&subject, Some(&cat_key));
+                                let known = count_known(&subject, Some(&cat_key), &progress.read());
+                                rsx! {
+                                    button {
+                                        class: if is_active { "category-btn category-btn--active" } else { "category-btn" },
+                                        onclick: move |_| selected_category.set(Some(cat_key_for_click.clone())),
+                                        span { class: "category-emoji", "{cat.emoji}" }
+                                        span { class: "category-name", "{cat.display_name}" }
+                                        span { class: "category-count", "{known} / {total}" }
+                                    }
                                 }
                             }
                         }
                     }
                 }
 
-                // Mastery progress bar for selected category
+                // Mastery progress bar
                 {
                     let total = word_count();
                     let known = known_count();
@@ -260,7 +297,6 @@ pub fn CategoryScreen(
                     }
                 }
 
-                // Word count info
                 div { class: "word-count-info",
                     if can_start() {
                         span { class: "word-count-ok",
@@ -274,7 +310,6 @@ pub fn CategoryScreen(
                 }
             }
 
-            // Start button
             div { class: "start-section",
                 button {
                     class: if can_start() { "start-btn" } else { "start-btn start-btn--disabled" },
@@ -292,6 +327,70 @@ pub fn CategoryScreen(
                         }
                     },
                     "Choose Mode  →"
+                }
+            }
+        }
+    }
+}
+
+fn render_section_view(
+    subject: &Subject,
+    mut selected_category: Signal<Option<String>>,
+    progress: Signal<Progress>,
+) -> Element {
+    let sections = units::all_sections();
+    rsx! {
+        div { class: "category-grid",
+            {
+                let total = count_entries(subject, None);
+                let known = count_known(subject, None, &progress.read());
+                rsx! {
+                    button {
+                        class: if selected_category.read().is_none() {
+                            "category-btn category-btn--active"
+                        } else {
+                            "category-btn"
+                        },
+                        onclick: move |_| selected_category.set(None),
+                        span { class: "category-emoji", "🌟" }
+                        span { class: "category-name", "All" }
+                        span { class: "category-count", "{known} / {total}" }
+                    }
+                }
+            }
+        }
+        for &sec in sections.iter() {
+            {
+                let section_units = units::units_in_section(sec);
+                let sec_name = units::section_name(sec);
+                rsx! {
+                    h2 { class: "section-label section-label--unit", "{sec_name}" }
+                    div { class: "category-grid category-grid--units",
+                        for u in section_units.iter() {
+                            {
+                                let key = units::unit_key(u.section, u.unit);
+                                let key_for_click = key.clone();
+                                let is_active = selected_category.read().as_ref() == Some(&key);
+                                let total = count_entries(subject, Some(&key));
+                                let known = count_known(subject, Some(&key), &progress.read());
+                                let emoji = u.emoji.to_string();
+                                let unit_num = u.unit;
+                                let name = u.name.to_string();
+                                rsx! {
+                                    button {
+                                        class: if is_active { "unit-btn unit-btn--active" } else { "unit-btn" },
+                                        onclick: move |_| selected_category.set(Some(key_for_click.clone())),
+                                        div { class: "unit-btn-top",
+                                            span { class: "unit-emoji", "{emoji}" }
+                                            span { class: "unit-number", "{unit_num}" }
+                                        }
+                                        span { class: "unit-name", "{name}" }
+                                        span { class: "unit-count", "{known}/{total}" }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

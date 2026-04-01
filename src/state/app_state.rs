@@ -1,4 +1,5 @@
 use crate::data::{Category, MathTopic};
+use crate::data::units;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -127,11 +128,19 @@ impl GameConfig {
         match &self.category {
             None => "All".to_string(),
             Some(key) => match &self.subject {
-                Subject::Korean => Category::all()
-                    .iter()
-                    .find(|c| c.display_name().to_lowercase() == *key)
-                    .map(|c| c.display_name().to_string())
-                    .unwrap_or_else(|| key.clone()),
+                Subject::Korean => {
+                    if let Some((sec, unit)) = units::parse_unit_key(key) {
+                        units::get_unit(sec, unit)
+                            .map(|u| format!("S{}·{}", u.section, u.name))
+                            .unwrap_or_else(|| key.clone())
+                    } else {
+                        Category::all()
+                            .iter()
+                            .find(|c| c.display_name().to_lowercase() == *key)
+                            .map(|c| c.display_name().to_string())
+                            .unwrap_or_else(|| key.clone())
+                    }
+                }
                 Subject::MathAnalysis => {
                     MathTopic::all_for_subject(crate::data::MathSubject::Analysis)
                         .into_iter()

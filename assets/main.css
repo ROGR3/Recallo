@@ -281,6 +281,90 @@ html, body { height: 100%; background: var(--bg); color: var(--text); }
    ════════════════════════════════════════════════════════════════════════════ */
 .category-screen {}
 
+/* View mode toggle (By Type / By Section) */
+.view-toggle {
+  display: flex;
+  gap: 0;
+  background: var(--bg-surface);
+  border-radius: var(--radius-full);
+  padding: 3px;
+  margin-bottom: 14px;
+}
+
+.view-toggle-btn {
+  flex: 1;
+  padding: 7px 12px;
+  border: none;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--text-2);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.view-toggle-btn--active {
+  background: var(--bg-card);
+  color: var(--accent);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Section headers in unit view */
+.section-label--unit {
+  margin-top: 8px;
+  margin-bottom: 6px;
+  color: var(--accent);
+}
+
+/* Unit grid — narrower items to fit more */
+.category-grid--units {
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+/* Unit buttons */
+.unit-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 4px 6px;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: transform 0.1s, border-color 0.15s;
+  min-width: 0;
+}
+.unit-btn:active { transform: scale(0.96); }
+
+.unit-btn--active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.unit-btn-top {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.unit-emoji { font-size: 1rem; }
+.unit-number { font-size: 0.6rem; font-weight: 700; color: var(--text-3); }
+.unit-name {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--text);
+  text-align: center;
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+.unit-count { font-size: 0.55rem; color: var(--text-3); font-variant-numeric: tabular-nums; }
+
 .category-content {
   flex: 1;
   overflow-y: auto;
