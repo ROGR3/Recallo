@@ -137,11 +137,13 @@ fn build_math_questions(config: &GameConfig, progress: &Progress) -> Vec<Questio
     let subject_filter = config.subject.math_subject().expect("must be math subject");
 
     let cat_key = config.category.as_deref();
+    let type_filter = config.entry_type_filter;
     let pool: Vec<&'static MathEntry> = MATH_ENTRIES
         .iter()
         .filter(|e| {
             e.subject == subject_filter
                 && cat_key.is_none_or(|k| e.topic.key() == k)
+                && type_filter.matches(e.entry_type)
                 && config.should_include(progress.is_known(e.name))
         })
         .collect();
@@ -150,10 +152,10 @@ fn build_math_questions(config: &GameConfig, progress: &Progress) -> Vec<Questio
         return vec![];
     }
 
-    // Distractors from the same math subject
+    // Distractors from the same math subject and entry type
     let distractor_pool: Vec<&'static MathEntry> = MATH_ENTRIES
         .iter()
-        .filter(|e| e.subject == subject_filter)
+        .filter(|e| e.subject == subject_filter && type_filter.matches(e.entry_type))
         .collect();
 
     let count = config.mode.word_count().min(pool.len());

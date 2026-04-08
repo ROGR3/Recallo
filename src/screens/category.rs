@@ -1,5 +1,5 @@
 use crate::data::{self, units};
-use crate::state::{GameConfig, GameMode, Progress, Screen, Subject};
+use crate::state::{EntryTypeFilter, GameConfig, GameMode, Progress, Screen, Subject};
 use crate::util::{go_back, navigate};
 use dioxus::prelude::*;
 
@@ -37,19 +37,24 @@ pub fn CategoryScreen(
             ViewMode::ByType
         }
     });
+    let mut entry_type_filter: Signal<EntryTypeFilter> =
+        use_signal(|| EntryTypeFilter::Both);
 
     let categories = data::categories_for_subject(subject);
     let is_korean = subject == Subject::Korean;
+    let is_math = subject.is_math();
 
     let word_count = use_memo(move || {
         let cat = selected_category.read().clone();
-        data::count_entries(subject, cat.as_deref())
+        let etf = *entry_type_filter.read();
+        data::count_entries(subject, cat.as_deref(), etf)
     });
 
     let known_count = use_memo(move || {
         let cat = selected_category.read().clone();
+        let etf = *entry_type_filter.read();
         let prog = progress.read();
-        data::count_known(subject, cat.as_deref(), &prog)
+        data::count_known(subject, cat.as_deref(), etf, &prog)
     });
 
     let can_start = use_memo(move || word_count() >= MIN_WORDS_FOR_GAME);
@@ -90,6 +95,27 @@ pub fn CategoryScreen(
                     }
                 }
 
+                // Entry type filter (math subjects only)
+                if is_math {
+                    div { class: "view-toggle",
+                        button {
+                            class: if *entry_type_filter.read() == EntryTypeFilter::Both { "view-toggle-btn view-toggle-btn--active" } else { "view-toggle-btn" },
+                            onclick: move |_| entry_type_filter.set(EntryTypeFilter::Both),
+                            "All"
+                        }
+                        button {
+                            class: if *entry_type_filter.read() == EntryTypeFilter::DefinitionsOnly { "view-toggle-btn view-toggle-btn--active" } else { "view-toggle-btn" },
+                            onclick: move |_| entry_type_filter.set(EntryTypeFilter::DefinitionsOnly),
+                            "Definice"
+                        }
+                        button {
+                            class: if *entry_type_filter.read() == EntryTypeFilter::TheoremsOnly { "view-toggle-btn view-toggle-btn--active" } else { "view-toggle-btn" },
+                            onclick: move |_| entry_type_filter.set(EntryTypeFilter::TheoremsOnly),
+                            "V\u{011b}ty"
+                        }
+                    }
+                }
+
                 if *view_mode.read() == ViewMode::BySection && is_korean {
                     {render_section_view(subject, selected_category, progress)}
                 } else {
@@ -97,8 +123,9 @@ pub fn CategoryScreen(
                     div { class: "category-grid",
                         // "All" button
                         {
-                            let total = data::count_entries(subject, None);
-                            let known = data::count_known(subject, None, &progress.read());
+                            let etf = *entry_type_filter.read();
+                            let total = data::count_entries(subject, None, etf);
+                            let known = data::count_known(subject, None, etf, &progress.read());
                             rsx! {
                                 button {
                                     class: if selected_category.read().is_none() {
@@ -118,8 +145,9 @@ pub fn CategoryScreen(
                                 let key = cat.key.clone();
                                 let key_click = cat.key.clone();
                                 let is_active = selected_category.read().as_ref() == Some(&cat.key);
-                                let total = data::count_entries(subject, Some(&key));
-                                let known = data::count_known(subject, Some(&key), &progress.read());
+                                let etf = *entry_type_filter.read();
+                                let total = data::count_entries(subject, Some(&key), etf);
+                                let known = data::count_known(subject, Some(&key), etf, &progress.read());
                                 rsx! {
                                     button {
                                         class: if is_active { "category-btn category-btn--active" } else { "category-btn" },
@@ -228,6 +256,7 @@ pub fn CategoryScreen(
                                 include_unknown: filters.read().include_unknown,
                                 include_known: filters.read().include_known,
                                 mode: GameMode::Words20,
+                                entry_type_filter: *entry_type_filter.read(),
                             };
                             navigate(&mut current_screen, &mut history, Screen::ModeSelect { config });
                         }
@@ -248,8 +277,8 @@ fn render_section_view(
     rsx! {
         div { class: "category-grid",
             {
-                let total = data::count_entries(subject, None);
-                let known = data::count_known(subject, None, &progress.read());
+                let total = data::count_entries(subject, None, EntryTypeFilter::Both);
+                let known = data::count_known(subject, None, EntryTypeFilter::Both, &progress.read());
                 rsx! {
                     button {
                         class: if selected_category.read().is_none() {
@@ -277,8 +306,8 @@ fn render_section_view(
                                 let key = units::unit_key(u.section, u.unit);
                                 let key_click = key.clone();
                                 let is_active = selected_category.read().as_ref() == Some(&key);
-                                let total = data::count_entries(subject, Some(&key));
-                                let known = data::count_known(subject, Some(&key), &progress.read());
+                                let total = data::count_entries(subject, Some(&key), EntryTypeFilter::Both);
+                                let known = data::count_known(subject, Some(&key), EntryTypeFilter::Both, &progress.read());
                                 rsx! {
                                     button {
                                         class: if is_active { "unit-btn unit-btn--active" } else { "unit-btn" },

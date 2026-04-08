@@ -5,7 +5,7 @@ pub mod words;
 pub use math_words::{MathEntry, MathEntryType, MathSubject, MathTopic, MATH_ENTRIES};
 pub use words::{Category, Word, WORDS};
 
-use crate::state::{Progress, Subject};
+use crate::state::{EntryTypeFilter, Progress, Subject};
 
 // ── Shared entry helpers ────────────────────────────────────────────────────
 
@@ -53,13 +53,18 @@ pub fn categories_for_subject(subject: Subject) -> Vec<CategoryInfo> {
     }
 }
 
-/// Count total entries for a subject and optional category.
-pub fn count_entries(subject: Subject, category_key: Option<&str>) -> usize {
+/// Count total entries for a subject, optional category, and entry type filter.
+pub fn count_entries(
+    subject: Subject,
+    category_key: Option<&str>,
+    type_filter: EntryTypeFilter,
+) -> usize {
     if let Some(ms) = subject.math_subject() {
         MATH_ENTRIES
             .iter()
             .filter(|e| e.subject == ms)
             .filter(|e| category_key.is_none_or(|k| e.topic.key() == k))
+            .filter(|e| type_filter.matches(e.entry_type))
             .count()
     } else {
         WORDS
@@ -69,13 +74,19 @@ pub fn count_entries(subject: Subject, category_key: Option<&str>) -> usize {
     }
 }
 
-/// Count known entries for a subject and optional category.
-pub fn count_known(subject: Subject, category_key: Option<&str>, progress: &Progress) -> usize {
+/// Count known entries for a subject, optional category, and entry type filter.
+pub fn count_known(
+    subject: Subject,
+    category_key: Option<&str>,
+    type_filter: EntryTypeFilter,
+    progress: &Progress,
+) -> usize {
     if let Some(ms) = subject.math_subject() {
         MATH_ENTRIES
             .iter()
             .filter(|e| e.subject == ms)
             .filter(|e| category_key.is_none_or(|k| e.topic.key() == k))
+            .filter(|e| type_filter.matches(e.entry_type))
             .filter(|e| progress.is_known(e.name))
             .count()
     } else {

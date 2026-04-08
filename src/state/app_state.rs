@@ -1,6 +1,23 @@
 use crate::data::units;
-use crate::data::{Category, MathSubject, MathTopic};
+use crate::data::{Category, MathEntryType, MathSubject, MathTopic};
 use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum EntryTypeFilter {
+    Both,
+    DefinitionsOnly,
+    TheoremsOnly,
+}
+
+impl EntryTypeFilter {
+    pub fn matches(self, entry_type: MathEntryType) -> bool {
+        match self {
+            EntryTypeFilter::Both => true,
+            EntryTypeFilter::DefinitionsOnly => entry_type == MathEntryType::Definition,
+            EntryTypeFilter::TheoremsOnly => entry_type == MathEntryType::Theorem,
+        }
+    }
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Screen {
@@ -123,6 +140,7 @@ pub struct GameConfig {
     pub include_unknown: bool,
     pub include_known: bool,
     pub mode: GameMode,
+    pub entry_type_filter: EntryTypeFilter,
 }
 
 impl GameConfig {
