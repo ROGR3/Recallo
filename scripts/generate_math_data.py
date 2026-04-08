@@ -20,6 +20,7 @@ TOPIC_MAP = {
     # DataScience/Statistics topics
     ("statistika", 1): ("Estimation", "Estimation", "📏"),
     ("statistika", 2): ("RelationshipAnalysis", "Relationship Analysis", "🔗"),
+    ("statistika", 3): ("BayesianInference", "Bayesian Inference", "🧮"),
     ("statistika", 4): ("Classification", "Classification", "🏷️"),
     ("statistika", 5): ("RegressionCorrelation", "Regression & Correlation", "📉"),
     ("statistika", 6): ("ExploratoryAnalysis", "Exploratory Analysis", "🔍"),
@@ -167,17 +168,19 @@ def main():
     lines.append("")
 
     # all_for_subject
-    lines.append("    pub fn all_for_subject(subject: MathSubject) -> Vec<MathTopic> {")
+    lines.append(
+        "    pub fn all_for_subject(subject: MathSubject) -> &'static [MathTopic] {"
+    )
     lines.append("        match subject {")
 
     analysis_topics = [v for (p, _), (v, _, _) in TOPIC_MAP.items() if p == "analyza"]
     ds_topics = [v for (p, _), (v, _, _) in TOPIC_MAP.items() if p == "statistika"]
 
-    lines.append("            MathSubject::Analysis => vec![")
+    lines.append("            MathSubject::Analysis => &[")
     for t in analysis_topics:
         lines.append(f"                MathTopic::{t},")
     lines.append("            ],")
-    lines.append("            MathSubject::DataScience => vec![")
+    lines.append("            MathSubject::DataScience => &[")
     for t in ds_topics:
         lines.append(f"                MathTopic::{t},")
     lines.append("            ],")

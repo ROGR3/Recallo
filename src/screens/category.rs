@@ -1,117 +1,7 @@
-use crate::data::units;
-use crate::data::{Category, MathTopic, MATH_ENTRIES, WORDS};
+use crate::data::{self, units};
 use crate::state::{GameConfig, GameMode, Progress, Screen, Subject};
+use crate::util::{go_back, navigate};
 use dioxus::prelude::*;
-
-#[derive(Clone, PartialEq)]
-struct CategoryInfo {
-    key: String,
-    display_name: String,
-    emoji: String,
-}
-
-fn categories_for_subject(subject: &Subject) -> Vec<CategoryInfo> {
-    match subject {
-        Subject::Korean => Category::all()
-            .iter()
-            .map(|c| CategoryInfo {
-                key: c.display_name().to_lowercase(),
-                display_name: c.display_name().to_string(),
-                emoji: c.emoji().to_string(),
-            })
-            .collect(),
-        Subject::MathAnalysis => MathTopic::all_for_subject(crate::data::MathSubject::Analysis)
-            .into_iter()
-            .map(|t| CategoryInfo {
-                key: t.key().to_string(),
-                display_name: t.display_name().to_string(),
-                emoji: t.emoji().to_string(),
-            })
-            .collect(),
-        Subject::MathDataScience => {
-            MathTopic::all_for_subject(crate::data::MathSubject::DataScience)
-                .into_iter()
-                .map(|t| CategoryInfo {
-                    key: t.key().to_string(),
-                    display_name: t.display_name().to_string(),
-                    emoji: t.emoji().to_string(),
-                })
-                .collect()
-        }
-    }
-}
-
-fn count_entries(subject: &Subject, category_key: Option<&str>) -> usize {
-    match subject {
-        Subject::Korean => WORDS
-            .iter()
-            .filter(|w| match category_key {
-                None => true,
-                Some(k) if units::parse_unit_key(k).is_some() => {
-                    let (sec, unit) = units::parse_unit_key(k).unwrap();
-                    units::word_unit(w.korean) == Some((sec, unit))
-                }
-                Some(k) => w.category.display_name().to_lowercase() == *k,
-            })
-            .count(),
-        Subject::MathAnalysis => MATH_ENTRIES
-            .iter()
-            .filter(|e| e.subject == crate::data::MathSubject::Analysis)
-            .filter(|e| category_key.as_ref().is_none_or(|k| e.topic.key() == *k))
-            .count(),
-        Subject::MathDataScience => MATH_ENTRIES
-            .iter()
-            .filter(|e| e.subject == crate::data::MathSubject::DataScience)
-            .filter(|e| category_key.as_ref().is_none_or(|k| e.topic.key() == *k))
-            .count(),
-    }
-}
-
-fn count_known(subject: &Subject, category_key: Option<&str>, progress: &Progress) -> usize {
-    match subject {
-        Subject::Korean => WORDS
-            .iter()
-            .filter(|w| match category_key {
-                None => true,
-                Some(k) if units::parse_unit_key(k).is_some() => {
-                    let (sec, unit) = units::parse_unit_key(k).unwrap();
-                    units::word_unit(w.korean) == Some((sec, unit))
-                }
-                Some(k) => w.category.display_name().to_lowercase() == *k,
-            })
-            .filter(|w| progress.is_known(w.korean))
-            .count(),
-        Subject::MathAnalysis => MATH_ENTRIES
-            .iter()
-            .filter(|e| e.subject == crate::data::MathSubject::Analysis)
-            .filter(|e| category_key.as_ref().is_none_or(|k| e.topic.key() == *k))
-            .filter(|e| progress.is_known(e.name))
-            .count(),
-        Subject::MathDataScience => MATH_ENTRIES
-            .iter()
-            .filter(|e| e.subject == crate::data::MathSubject::DataScience)
-            .filter(|e| category_key.as_ref().is_none_or(|k| e.topic.key() == *k))
-            .filter(|e| progress.is_known(e.name))
-            .count(),
-    }
-}
-
-fn navigate(
-    current_screen: &mut Signal<Screen>,
-    history: &mut Signal<Vec<Screen>>,
-    target: Screen,
-) {
-    history.write().push(current_screen.read().clone());
-    current_screen.set(target);
-}
-
-fn go_back(current_screen: &mut Signal<Screen>, history: &mut Signal<Vec<Screen>>) {
-    if let Some(prev) = history.write().pop() {
-        current_screen.set(prev);
-    } else {
-        current_screen.set(Screen::Home);
-    }
-}
 
 #[derive(Clone, Copy, PartialEq)]
 enum ViewMode {
@@ -124,6 +14,9 @@ struct FilterState {
     include_unknown: bool,
     include_known: bool,
 }
+
+/// Minimum number of words required to start a game (needed for MC distractors).
+const MIN_WORDS_FOR_GAME: usize = 4;
 
 #[component]
 pub fn CategoryScreen(
@@ -145,23 +38,21 @@ pub fn CategoryScreen(
         }
     });
 
-    let categories = categories_for_subject(&subject);
+    let categories = data::categories_for_subject(subject);
     let is_korean = subject == Subject::Korean;
 
-    let subject_for_count = subject.clone();
     let word_count = use_memo(move || {
         let cat = selected_category.read().clone();
-        count_entries(&subject_for_count, cat.as_deref())
+        data::count_entries(subject, cat.as_deref())
     });
 
-    let subject_for_known = subject.clone();
     let known_count = use_memo(move || {
         let cat = selected_category.read().clone();
         let prog = progress.read();
-        count_known(&subject_for_known, cat.as_deref(), &prog)
+        data::count_known(subject, cat.as_deref(), &prog)
     });
 
-    let can_start = use_memo(move || word_count() >= 4);
+    let can_start = use_memo(move || word_count() >= MIN_WORDS_FOR_GAME);
 
     rsx! {
         div { class: "screen category-screen",
@@ -169,7 +60,7 @@ pub fn CategoryScreen(
                 button {
                     class: "back-btn",
                     onclick: move |_| go_back(&mut current_screen, &mut history),
-                    "←"
+                    "\u{2190}"
                 }
                 h1 { class: "screen-title",
                     "{subject.flag()} {subject.display_name()}"
@@ -200,15 +91,14 @@ pub fn CategoryScreen(
                 }
 
                 if *view_mode.read() == ViewMode::BySection && is_korean {
-                    // Section/Unit view
-                    {render_section_view(&subject, selected_category, progress)}
+                    {render_section_view(subject, selected_category, progress)}
                 } else {
-                    // Type-based view (original)
                     h2 { class: "section-label", "Category" }
                     div { class: "category-grid",
+                        // "All" button
                         {
-                            let total = count_entries(&subject, None);
-                            let known = count_known(&subject, None, &progress.read());
+                            let total = data::count_entries(subject, None);
+                            let known = data::count_known(subject, None, &progress.read());
                             rsx! {
                                 button {
                                     class: if selected_category.read().is_none() {
@@ -217,7 +107,7 @@ pub fn CategoryScreen(
                                         "category-btn"
                                     },
                                     onclick: move |_| selected_category.set(None),
-                                    span { class: "category-emoji", "🌟" }
+                                    span { class: "category-emoji", "\u{1f31f}" }
                                     span { class: "category-name", "All" }
                                     span { class: "category-count", "{known} / {total}" }
                                 }
@@ -225,16 +115,15 @@ pub fn CategoryScreen(
                         }
                         for cat in categories.iter() {
                             {
-                                let cat = cat.clone();
-                                let cat_key = cat.key.clone();
-                                let cat_key_for_click = cat.key.clone();
+                                let key = cat.key.clone();
+                                let key_click = cat.key.clone();
                                 let is_active = selected_category.read().as_ref() == Some(&cat.key);
-                                let total = count_entries(&subject, Some(&cat_key));
-                                let known = count_known(&subject, Some(&cat_key), &progress.read());
+                                let total = data::count_entries(subject, Some(&key));
+                                let known = data::count_known(subject, Some(&key), &progress.read());
                                 rsx! {
                                     button {
                                         class: if is_active { "category-btn category-btn--active" } else { "category-btn" },
-                                        onclick: move |_| selected_category.set(Some(cat_key_for_click.clone())),
+                                        onclick: move |_| selected_category.set(Some(key_click.clone())),
                                         span { class: "category-emoji", "{cat.emoji}" }
                                         span { class: "category-name", "{cat.display_name}" }
                                         span { class: "category-count", "{known} / {total}" }
@@ -251,7 +140,6 @@ pub fn CategoryScreen(
                     let known = known_count();
                     let unknown = total - known;
                     let pct = if total > 0 { known * 100 / total } else { 0 };
-                    let subject_for_nav = subject.clone();
                     rsx! {
                         div { class: "mastery-summary",
                             div { class: "mastery-bar-container",
@@ -268,7 +156,7 @@ pub fn CategoryScreen(
                                         navigate(
                                             &mut current_screen,
                                             &mut history,
-                                            Screen::KnownWords { subject: subject_for_nav.clone() },
+                                            Screen::KnownWords { subject },
                                         );
                                     },
                                     "View mastered \u{2192}"
@@ -322,7 +210,7 @@ pub fn CategoryScreen(
                         }
                     } else {
                         span { class: "word-count-warn",
-                            "Not enough words in this selection (min 4)"
+                            "Not enough words in this selection (min {MIN_WORDS_FOR_GAME})"
                         }
                     }
                 }
@@ -335,7 +223,7 @@ pub fn CategoryScreen(
                     onclick: move |_| {
                         if can_start() {
                             let config = GameConfig {
-                                subject: subject.clone(),
+                                subject,
                                 category: selected_category.read().clone(),
                                 include_unknown: filters.read().include_unknown,
                                 include_known: filters.read().include_known,
@@ -344,7 +232,7 @@ pub fn CategoryScreen(
                             navigate(&mut current_screen, &mut history, Screen::ModeSelect { config });
                         }
                     },
-                    "Choose Mode  →"
+                    "Choose Mode  \u{2192}"
                 }
             }
         }
@@ -352,7 +240,7 @@ pub fn CategoryScreen(
 }
 
 fn render_section_view(
-    subject: &Subject,
+    subject: Subject,
     mut selected_category: Signal<Option<String>>,
     progress: Signal<Progress>,
 ) -> Element {
@@ -360,8 +248,8 @@ fn render_section_view(
     rsx! {
         div { class: "category-grid",
             {
-                let total = count_entries(subject, None);
-                let known = count_known(subject, None, &progress.read());
+                let total = data::count_entries(subject, None);
+                let known = data::count_known(subject, None, &progress.read());
                 rsx! {
                     button {
                         class: if selected_category.read().is_none() {
@@ -370,7 +258,7 @@ fn render_section_view(
                             "category-btn"
                         },
                         onclick: move |_| selected_category.set(None),
-                        span { class: "category-emoji", "🌟" }
+                        span { class: "category-emoji", "\u{1f31f}" }
                         span { class: "category-name", "All" }
                         span { class: "category-count", "{known} / {total}" }
                     }
@@ -387,22 +275,19 @@ fn render_section_view(
                         for u in section_units.iter() {
                             {
                                 let key = units::unit_key(u.section, u.unit);
-                                let key_for_click = key.clone();
+                                let key_click = key.clone();
                                 let is_active = selected_category.read().as_ref() == Some(&key);
-                                let total = count_entries(subject, Some(&key));
-                                let known = count_known(subject, Some(&key), &progress.read());
-                                let emoji = u.emoji.to_string();
-                                let unit_num = u.unit;
-                                let name = u.name.to_string();
+                                let total = data::count_entries(subject, Some(&key));
+                                let known = data::count_known(subject, Some(&key), &progress.read());
                                 rsx! {
                                     button {
                                         class: if is_active { "unit-btn unit-btn--active" } else { "unit-btn" },
-                                        onclick: move |_| selected_category.set(Some(key_for_click.clone())),
+                                        onclick: move |_| selected_category.set(Some(key_click.clone())),
                                         div { class: "unit-btn-top",
-                                            span { class: "unit-emoji", "{emoji}" }
-                                            span { class: "unit-number", "{unit_num}" }
+                                            span { class: "unit-emoji", "{u.emoji}" }
+                                            span { class: "unit-number", "{u.unit}" }
                                         }
-                                        span { class: "unit-name", "{name}" }
+                                        span { class: "unit-name", "{u.name}" }
                                         span { class: "unit-count", "{known}/{total}" }
                                     }
                                 }

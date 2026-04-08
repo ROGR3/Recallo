@@ -1,5 +1,5 @@
 use crate::data::units;
-use crate::data::{Category, MathTopic};
+use crate::data::{Category, MathSubject, MathTopic};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -13,7 +13,7 @@ pub enum Screen {
     KnownWords { subject: Subject },
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Subject {
     Korean,
     MathAnalysis,
@@ -21,7 +21,7 @@ pub enum Subject {
 }
 
 impl Subject {
-    pub fn display_name(&self) -> &'static str {
+    pub fn display_name(self) -> &'static str {
         match self {
             Subject::Korean => "Korean",
             Subject::MathAnalysis => "Math Analysis",
@@ -29,23 +29,23 @@ impl Subject {
         }
     }
 
-    pub fn flag(&self) -> &'static str {
+    pub fn flag(self) -> &'static str {
         match self {
-            Subject::Korean => "🇰🇷",
-            Subject::MathAnalysis => "📐",
-            Subject::MathDataScience => "📊",
+            Subject::Korean => "\u{1f1f0}\u{1f1f7}",
+            Subject::MathAnalysis => "\u{1f4d0}",
+            Subject::MathDataScience => "\u{1f4ca}",
         }
     }
 
-    pub fn native_name(&self) -> &'static str {
+    pub fn native_name(self) -> &'static str {
         match self {
-            Subject::Korean => "한국어",
-            Subject::MathAnalysis => "Analýza",
+            Subject::Korean => "\u{d55c}\u{ad6d}\u{c5b4}",
+            Subject::MathAnalysis => "Anal\u{00fd}za",
             Subject::MathDataScience => "Statistika",
         }
     }
 
-    pub fn key(&self) -> &'static str {
+    pub fn key(self) -> &'static str {
         match self {
             Subject::Korean => "korean",
             Subject::MathAnalysis => "math_analysis",
@@ -53,8 +53,17 @@ impl Subject {
         }
     }
 
-    pub fn is_math(&self) -> bool {
+    pub fn is_math(self) -> bool {
         matches!(self, Subject::MathAnalysis | Subject::MathDataScience)
+    }
+
+    /// Returns the `MathSubject` for math subjects, or `None` for Korean.
+    pub fn math_subject(self) -> Option<MathSubject> {
+        match self {
+            Subject::Korean => None,
+            Subject::MathAnalysis => Some(MathSubject::Analysis),
+            Subject::MathDataScience => Some(MathSubject::DataScience),
+        }
     }
 }
 
@@ -67,35 +76,35 @@ pub enum GameMode {
 }
 
 impl GameMode {
-    pub fn word_count(&self) -> usize {
+    pub fn word_count(self) -> usize {
         match self {
             GameMode::Words10 => 10,
             GameMode::Words20 => 20,
         }
     }
 
-    pub fn display_name(&self) -> &'static str {
+    pub fn display_name(self) -> &'static str {
         match self {
             GameMode::Words10 => "10 Words",
             GameMode::Words20 => "20 Words",
         }
     }
 
-    pub fn subtitle(&self) -> &'static str {
+    pub fn subtitle(self) -> &'static str {
         match self {
             GameMode::Words10 => "Quick round",
             GameMode::Words20 => "Standard round",
         }
     }
 
-    pub fn emoji(&self) -> &'static str {
+    pub fn emoji(self) -> &'static str {
         match self {
-            GameMode::Words10 => "⚡",
-            GameMode::Words20 => "📝",
+            GameMode::Words10 => "\u{26a1}",
+            GameMode::Words20 => "\u{1f4dd}",
         }
     }
 
-    pub fn key(&self) -> &'static str {
+    pub fn key(self) -> &'static str {
         match self {
             GameMode::Words10 => "10",
             GameMode::Words20 => "20",
@@ -103,7 +112,7 @@ impl GameMode {
     }
 }
 
-/// Seconds added to the timer for each wrong answer
+/// Seconds added to the timer for each wrong answer.
 pub const PENALTY_SECONDS: f64 = 30.0;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -124,39 +133,39 @@ impl GameConfig {
         }
     }
 
+    /// Whether a word with the given known status should be included per filter settings.
+    pub fn should_include(&self, is_known: bool) -> bool {
+        match (self.include_unknown, self.include_known) {
+            (true, true) | (false, false) => true,
+            (true, false) => !is_known,
+            (false, true) => is_known,
+        }
+    }
+
     /// Resolve category key to a human-readable display name.
     pub fn category_display_name(&self) -> String {
         match &self.category {
             None => "All".to_string(),
-            Some(key) => match &self.subject {
-                Subject::Korean => {
-                    if let Some((sec, unit)) = units::parse_unit_key(key) {
-                        units::get_unit(sec, unit)
-                            .map(|u| format!("S{}·{}", u.section, u.name))
-                            .unwrap_or_else(|| key.clone())
-                    } else {
-                        Category::all()
-                            .iter()
-                            .find(|c| c.display_name().to_lowercase() == *key)
-                            .map(|c| c.display_name().to_string())
-                            .unwrap_or_else(|| key.clone())
-                    }
+            Some(key) => {
+                if let Some((sec, unit)) = units::parse_unit_key(key) {
+                    return units::get_unit(sec, unit)
+                        .map(|u| format!("S{}\u{00b7}{}", u.section, u.name))
+                        .unwrap_or_else(|| key.clone());
                 }
-                Subject::MathAnalysis => {
-                    MathTopic::all_for_subject(crate::data::MathSubject::Analysis)
-                        .into_iter()
-                        .find(|t| t.key() == key)
+                if let Some(ms) = self.subject.math_subject() {
+                    return MathTopic::all_for_subject(ms)
+                        .iter()
+                        .find(|t| t.key() == key.as_str())
                         .map(|t| t.display_name().to_string())
-                        .unwrap_or_else(|| key.clone())
+                        .unwrap_or_else(|| key.clone());
                 }
-                Subject::MathDataScience => {
-                    MathTopic::all_for_subject(crate::data::MathSubject::DataScience)
-                        .into_iter()
-                        .find(|t| t.key() == key)
-                        .map(|t| t.display_name().to_string())
-                        .unwrap_or_else(|| key.clone())
-                }
-            },
+                // Korean category
+                Category::all()
+                    .iter()
+                    .find(|c| c.display_name().to_lowercase() == *key)
+                    .map(|c| c.display_name().to_string())
+                    .unwrap_or_else(|| key.clone())
+            }
         }
     }
 
@@ -191,7 +200,7 @@ pub enum Theme {
 }
 
 impl Theme {
-    pub fn css_class(&self) -> &'static str {
+    pub fn css_class(self) -> &'static str {
         match self {
             Theme::System => "",
             Theme::Light => "theme-light",
@@ -199,11 +208,19 @@ impl Theme {
         }
     }
 
-    pub fn display_name(&self) -> &'static str {
+    pub fn display_name(self) -> &'static str {
         match self {
             Theme::System => "System",
             Theme::Light => "Light",
             Theme::Dark => "Dark",
+        }
+    }
+
+    pub fn emoji(self) -> &'static str {
+        match self {
+            Theme::System => "\u{1f4f1}",
+            Theme::Light => "\u{2600}\u{fe0f}",
+            Theme::Dark => "\u{1f319}",
         }
     }
 }

@@ -1,6 +1,7 @@
 mod data;
 mod screens;
 mod state;
+pub mod util;
 
 use dioxus::prelude::*;
 use screens::{
@@ -15,6 +16,8 @@ pub const LOGO: Asset = asset!("/assets/logo.png");
 fn main() {
     dioxus::launch(App);
 }
+
+const BACK_POLL_MS: u64 = 100;
 
 #[component]
 fn App() -> Element {
@@ -44,25 +47,17 @@ fn App() -> Element {
             let mut seen: i64 = 0;
 
             loop {
-                // Short sleep to avoid busy-looping — 100 ms is responsive enough
-                #[cfg(not(target_arch = "wasm32"))]
-                async_std::task::sleep(std::time::Duration::from_millis(100)).await;
-                #[cfg(target_arch = "wasm32")]
-                gloo_timers::future::sleep(std::time::Duration::from_millis(100)).await;
+                util::async_sleep_ms(BACK_POLL_MS).await;
 
-                // Read the JS counter
                 let mut eval = document::eval(r#"
                     dioxus.send(window.__recallo_back_count || 0);
                 "#);
                 if let Ok(count) = eval.recv::<i64>().await {
                     while seen < count {
                         seen += 1;
-                        // Navigate back in app history
                         if let Some(prev) = history.write().pop() {
                             current_screen.set(prev);
                         }
-                        // If history is empty we're at Home — let Android
-                        // handle the next back press (it will close the app).
                     }
                 }
             }
@@ -113,7 +108,6 @@ fn App() -> Element {
                     ResultsScreen {
                         result,
                         current_screen,
-                        history,
                     }
                 },
                 Screen::KnownWords { subject } => rsx! {

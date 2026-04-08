@@ -1,33 +1,6 @@
 use crate::state::{GameConfig, GameMode, Progress, Screen, PENALTY_SECONDS};
+use crate::util::{format_time, go_back, navigate};
 use dioxus::prelude::*;
-
-fn format_time(secs: f64) -> String {
-    let mins = (secs / 60.0) as u32;
-    let sec_part = (secs % 60.0) as u32;
-    let ms = ((secs % 1.0) * 10.0) as u32;
-    if mins > 0 {
-        format!("{:02}:{:02}.{}", mins, sec_part, ms)
-    } else {
-        format!("{}.{}s", sec_part, ms)
-    }
-}
-
-fn navigate(
-    current_screen: &mut Signal<Screen>,
-    history: &mut Signal<Vec<Screen>>,
-    target: Screen,
-) {
-    history.write().push(current_screen.read().clone());
-    current_screen.set(target);
-}
-
-fn go_back(current_screen: &mut Signal<Screen>, history: &mut Signal<Vec<Screen>>) {
-    if let Some(prev) = history.write().pop() {
-        current_screen.set(prev);
-    } else {
-        current_screen.set(Screen::Home);
-    }
-}
 
 #[component]
 pub fn ModeSelectScreen(
@@ -37,7 +10,6 @@ pub fn ModeSelectScreen(
     progress: Signal<Progress>,
 ) -> Element {
     let cat_display = config.category_display_name();
-
     let penalty = PENALTY_SECONDS as u32;
 
     rsx! {
@@ -46,7 +18,7 @@ pub fn ModeSelectScreen(
                 button {
                     class: "back-btn",
                     onclick: move |_| go_back(&mut current_screen, &mut history),
-                    "←"
+                    "\u{2190}"
                 }
                 h1 { class: "screen-title",
                     "{config.subject.flag()} {cat_display}"
@@ -57,9 +29,8 @@ pub fn ModeSelectScreen(
                 h2 { class: "section-label", "Choose mode" }
 
                 div { class: "mode-grid",
-                    for mode in &[GameMode::Words10, GameMode::Words20] {
+                    for mode in [GameMode::Words10, GameMode::Words20] {
                         {
-                            let mode = *mode;
                             let mut cfg = config.clone();
                             cfg.mode = mode;
                             let best_key = cfg.best_time_key();

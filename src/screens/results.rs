@@ -1,34 +1,20 @@
 use crate::state::{GameResult, Screen};
+use crate::util::format_time;
 use dioxus::prelude::*;
 
-fn format_time(secs: f64) -> String {
-    let mins = (secs / 60.0) as u32;
-    let sec_part = (secs % 60.0) as u32;
-    let ms = ((secs % 1.0) * 10.0) as u32;
-    if mins > 0 {
-        format!("{:02}:{:02}.{}", mins, sec_part, ms)
-    } else {
-        format!("{}.{}s", sec_part, ms)
-    }
-}
-
 #[component]
-pub fn ResultsScreen(
-    result: GameResult,
-    mut current_screen: Signal<Screen>,
-    mut history: Signal<Vec<Screen>>,
-) -> Element {
+pub fn ResultsScreen(result: GameResult, mut current_screen: Signal<Screen>) -> Element {
     let pct = if result.total > 0 {
         (result.score as f64 / result.total as f64 * 100.0) as u32
     } else {
         0
     };
 
-    let grade = match pct {
-        90..=100 => ("🏆", "Excellent!", "grade--gold"),
-        70..=89 => ("⭐", "Great job!", "grade--silver"),
-        50..=69 => ("👍", "Good effort!", "grade--bronze"),
-        _ => ("💪", "Keep practicing!", "grade--default"),
+    let (grade_emoji, grade_title, grade_class) = match pct {
+        90..=100 => ("\u{1f3c6}", "Excellent!", "grade--gold"),
+        70..=89 => ("\u{2b50}", "Great job!", "grade--silver"),
+        50..=69 => ("\u{1f44d}", "Good effort!", "grade--bronze"),
+        _ => ("\u{1f4aa}", "Keep practicing!", "grade--default"),
     };
 
     let time_str = format_time(result.time_seconds);
@@ -45,9 +31,9 @@ pub fn ResultsScreen(
     rsx! {
         div { class: "screen results-screen",
             div { class: "results-hero",
-                span { class: "results-grade-emoji", "{grade.0}" }
-                h1 { class: "results-title {grade.2}", "{grade.1}" }
-                p { class: "results-subtitle", "{cat_display} · {mode_name}" }
+                span { class: "results-grade-emoji", "{grade_emoji}" }
+                h1 { class: "results-title {grade_class}", "{grade_title}" }
+                p { class: "results-subtitle", "{cat_display} \u{00b7} {mode_name}" }
             }
 
             div { class: "results-stats",

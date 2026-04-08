@@ -1,13 +1,6 @@
 use crate::state::{Progress, Screen, Theme};
+use crate::util::go_back;
 use dioxus::prelude::*;
-
-fn go_back(current_screen: &mut Signal<Screen>, history: &mut Signal<Vec<Screen>>) {
-    if let Some(prev) = history.write().pop() {
-        current_screen.set(prev);
-    } else {
-        current_screen.set(Screen::Home);
-    }
-}
 
 #[component]
 pub fn SettingsScreen(
@@ -23,7 +16,7 @@ pub fn SettingsScreen(
                 button {
                     class: "back-btn",
                     onclick: move |_| go_back(&mut current_screen, &mut history),
-                    "←"
+                    "\u{2190}"
                 }
                 h1 { class: "screen-title", "Settings" }
             }
@@ -31,15 +24,9 @@ pub fn SettingsScreen(
             div { class: "category-content",
                 h2 { class: "section-label", "Theme" }
                 div { class: "theme-options",
-                    for theme in &[Theme::System, Theme::Light, Theme::Dark] {
+                    for theme in [Theme::System, Theme::Light, Theme::Dark] {
                         {
-                            let theme = *theme;
                             let is_active = current_theme == theme;
-                            let emoji = match theme {
-                                Theme::System => "📱",
-                                Theme::Light => "☀️",
-                                Theme::Dark => "🌙",
-                            };
                             rsx! {
                                 button {
                                     class: if is_active { "theme-btn theme-btn--active" } else { "theme-btn" },
@@ -47,7 +34,7 @@ pub fn SettingsScreen(
                                         progress.write().theme = theme;
                                         crate::state::save_progress(&progress.read());
                                     },
-                                    span { class: "theme-btn-emoji", "{emoji}" }
+                                    span { class: "theme-btn-emoji", "{theme.emoji()}" }
                                     span { class: "theme-btn-label", "{theme.display_name()}" }
                                 }
                             }
