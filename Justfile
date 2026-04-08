@@ -3,7 +3,7 @@
 # and the Dioxus CLI (dx) installed.
 
 # Android environment — adjust paths if needed
-export JAVA_HOME := "/usr/lib/jvm/java-17-openjdk"
+export JAVA_HOME := "/usr/lib/jvm/java-26-openjdk"
 export ANDROID_HOME := "/opt/android-sdk"
 export NDK_HOME := "/opt/android-sdk/ndk/27.0.12077973"
 
