@@ -107,14 +107,14 @@ fn build_korean_questions(config: &GameConfig, progress: &Progress) -> Vec<Quest
                 (
                     word.korean.to_string(),
                     word.english.to_string(),
-                    "What does this mean?".to_string(),
+                    "Co to znamen\u{00e1}?".to_string(),
                     choice_words.iter().map(|w| w.english.to_string()).collect(),
                 )
             } else {
                 (
                     word.english.to_string(),
                     word.korean.to_string(),
-                    "How do you say this in Korean?".to_string(),
+                    "Jak se to \u{0159}ekne korejsky?".to_string(),
                     choice_words.iter().map(|w| w.korean.to_string()).collect(),
                 )
             };
@@ -363,15 +363,15 @@ pub fn GameScreen(
                         onclick: move |_| { history.write().clear(); current_screen.set(Screen::Home); },
                         "\u{2190}"
                     }
-                    h1 { class: "screen-title", "No words" }
+                    h1 { class: "screen-title", "\u{017d}\u{00e1}dn\u{00e9} ot\u{00e1}zky" }
                 }
                 div { class: "empty-state",
-                    p { "No words available for this selection." }
-                    p { "Try changing the category or filters." }
+                    p { "Pro tento v\u{00fd}b\u{011b}r nejsou dostupn\u{00e9} \u{017e}\u{00e1}dn\u{00e9} ot\u{00e1}zky." }
+                    p { "Zkus zm\u{011b}nit kategorii nebo filtry." }
                     button {
                         class: "start-btn",
                         onclick: move |_| { history.write().clear(); current_screen.set(Screen::Home); },
-                        "Back to Home"
+                        "Zp\u{011b}t na hlavn\u{00ed}"
                     }
                 }
             }
@@ -456,13 +456,13 @@ pub fn GameScreen(
                         match answer_state.read().clone() {
                             AnswerState::Correct => rsx! {
                                 div { class: "feedback feedback--correct",
-                                    span { "\u{2713} Correct!" }
+                                    span { "\u{2713} Spr\u{00e1}vn\u{011b}!" }
                                 }
                             },
                             AnswerState::Wrong { correct_answer: ca } => rsx! {
                                 div { class: "feedback feedback--wrong",
                                     span { class: "feedback-wrong-header",
-                                        span { "\u{2717} Wrong" }
+                                        span { "\u{2717} \u{0160}patn\u{011b}" }
                                         span { class: "feedback-penalty", "+{penalty_display}s" }
                                     }
                                     span { class: "feedback-correct", "{ca}" }
@@ -480,10 +480,10 @@ pub fn GameScreen(
                                         crate::state::save_progress(&progress.read());
                                         marked_known.set(true);
                                     },
-                                    "\u{2713} I know this word"
+                                    "\u{2713} Toto u\u{017e} um\u{00ed}m"
                                 }
                             } else if *marked_known.read() {
-                                div { class: "known-badge", "Marked as known \u{2713}" }
+                                div { class: "known-badge", "Ozna\u{010d}eno \u{2713}" }
                             }
 
                             button {
@@ -510,7 +510,7 @@ pub fn GameScreen(
                                         resume_timer(&mut paused, &mut start_ms);
                                     }
                                 },
-                                if is_last { "Finish \u{2192}" } else { "Next \u{2192}" }
+                                if is_last { "Dokon\u{010d}it \u{2192}" } else { "Dal\u{0161}\u{00ed} \u{2192}" }
                             }
                         }
                     }
@@ -544,7 +544,7 @@ fn render_typing_input(
             input {
                 class: "type-input",
                 r#type: "text",
-                placeholder: "Type your answer...",
+                placeholder: "Napi\u{0161} odpov\u{011b}\u{010f}...",
                 value: "{typing_input}",
                 disabled: is_answered,
                 oninput: move |e| typing_input.set(e.value()),
@@ -570,7 +570,7 @@ fn render_typing_input(
                             score, penalty_total, mistakes, show_penalty, answer_state,
                         );
                     },
-                    "Submit"
+                    "Odeslat"
                 }
             }
         }

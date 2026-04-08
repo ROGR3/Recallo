@@ -40,9 +40,9 @@ pub enum Subject {
 impl Subject {
     pub fn display_name(self) -> &'static str {
         match self {
-            Subject::Korean => "Korean",
-            Subject::MathAnalysis => "Math Analysis",
-            Subject::MathDataScience => "Math DataScience",
+            Subject::Korean => "Korej\u{0161}tina",
+            Subject::MathAnalysis => "Anal\u{00fd}za",
+            Subject::MathDataScience => "Statistika",
         }
     }
 
@@ -102,15 +102,15 @@ impl GameMode {
 
     pub fn display_name(self) -> &'static str {
         match self {
-            GameMode::Words10 => "10 Words",
-            GameMode::Words20 => "20 Words",
+            GameMode::Words10 => "10 ot\u{00e1}zek",
+            GameMode::Words20 => "20 ot\u{00e1}zek",
         }
     }
 
     pub fn subtitle(self) -> &'static str {
         match self {
-            GameMode::Words10 => "Quick round",
-            GameMode::Words20 => "Standard round",
+            GameMode::Words10 => "Rychl\u{00e9} kolo",
+            GameMode::Words20 => "Standardn\u{00ed} kolo",
         }
     }
 
@@ -163,7 +163,7 @@ impl GameConfig {
     /// Resolve category key to a human-readable display name.
     pub fn category_display_name(&self) -> String {
         match &self.category {
-            None => "All".to_string(),
+            None => "V\u{0161}e".to_string(),
             Some(key) => {
                 if let Some((sec, unit)) = units::parse_unit_key(key) {
                     return units::get_unit(sec, unit)
@@ -228,9 +228,9 @@ impl Theme {
 
     pub fn display_name(self) -> &'static str {
         match self {
-            Theme::System => "System",
-            Theme::Light => "Light",
-            Theme::Dark => "Dark",
+            Theme::System => "Syst\u{00e9}m",
+            Theme::Light => "Sv\u{011b}tl\u{00fd}",
+            Theme::Dark => "Tmav\u{00fd}",
         }
     }
 

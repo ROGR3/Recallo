@@ -26,7 +26,7 @@ pub fn ModeSelectScreen(
             }
 
             div { class: "category-content",
-                h2 { class: "section-label", "Choose mode" }
+                h2 { class: "section-label", "Zvol re\u{017e}im" }
 
                 div { class: "mode-grid",
                     for mode in [GameMode::Words10, GameMode::Words20] {
@@ -52,7 +52,7 @@ pub fn ModeSelectScreen(
                 }
 
                 div { class: "mode-hint",
-                    "+{penalty}s penalty per wrong answer"
+                    "+{penalty}s penalizace za chybu"
                 }
             }
         }
@@ -72,12 +72,12 @@ fn ModeCard(mode: GameMode, best_time: Option<f64>, on_select: EventHandler<()>)
             p { class: "mode-card-subtitle", "{mode.subtitle()}" }
             if let Some(t) = best_time {
                 div { class: "mode-card-best",
-                    span { class: "mode-card-best-label", "Best" }
+                    span { class: "mode-card-best-label", "Rekord" }
                     span { class: "mode-card-best-time", "{format_time(t)}" }
                 }
             } else {
                 div { class: "mode-card-best mode-card-best--empty",
-                    span { "No record yet" }
+                    span { "\u{017d}\u{00e1}dn\u{00fd} rekord" }
                 }
             }
         }

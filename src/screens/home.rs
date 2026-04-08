@@ -19,11 +19,11 @@ pub fn HomeScreen(mut current_screen: Signal<Screen>, mut history: Signal<Vec<Sc
             div { class: "home-hero",
                 img { class: "app-logo-img", src: LOGO, alt: "Recallo logo" }
                 h1 { class: "app-title", "Recallo" }
-                p { class: "app-subtitle", "Vocabulary Training" }
+                p { class: "app-subtitle", "Tr\u{00e9}nink slovn\u{00ed} z\u{00e1}soby" }
             }
 
             div { class: "language-section",
-                h2 { class: "section-label", "Select Subject" }
+                h2 { class: "section-label", "Zvol p\u{0159}edm\u{011b}t" }
                 div { class: "language-grid",
                     for subject in [Subject::Korean, Subject::MathAnalysis, Subject::MathDataScience] {
                         SubjectTile {
@@ -37,7 +37,7 @@ pub fn HomeScreen(mut current_screen: Signal<Screen>, mut history: Signal<Vec<Sc
             }
 
             div { class: "home-footer",
-                p { "Timed \u{00b7} track your best" }
+                p { "Na \u{010d}as \u{00b7} sleduj sv\u{00e9} rekordy" }
             }
         }
     }

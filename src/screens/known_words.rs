@@ -93,7 +93,7 @@ pub fn KnownWordsScreen(
                     "\u{2190}"
                 }
                 h1 { class: "screen-title",
-                    "{subject.flag()} Mastered Words"
+                    "{subject.flag()} Nau\u{010d}en\u{00e9}"
                 }
             }
 
@@ -101,18 +101,14 @@ pub fn KnownWordsScreen(
                 if total_known == 0 {
                     div { class: "empty-state",
                         span { style: "font-size: 2.4rem;", "\u{1f331}" }
-                        p { "No mastered words yet." }
+                        p { "Zat\u{00ed}m \u{017e}\u{00e1}dn\u{00e9} nau\u{010d}en\u{00e9}." }
                         p { style: "font-size: 0.85rem; color: var(--text-3);",
-                            "Play a quiz and tap \"I know this\" to mark words."
+                            "Zahraj si kv\u{00ed}z a klikni na \"Toto u\u{017e} um\u{00ed}m\"."
                         }
                     }
                 } else {
                     {
-                        let label = if total_known == 1 {
-                            format!("{total_known} word mastered")
-                        } else {
-                            format!("{total_known} words mastered")
-                        };
+                        let label = format!("{total_known} nau\u{010d}eno");
                         rsx! {
                             div { class: "known-summary-pill", "{label}" }
                         }

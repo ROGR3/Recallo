@@ -18,11 +18,11 @@ pub fn SettingsScreen(
                     onclick: move |_| go_back(&mut current_screen, &mut history),
                     "\u{2190}"
                 }
-                h1 { class: "screen-title", "Settings" }
+                h1 { class: "screen-title", "Nastaven\u{00ed}" }
             }
 
             div { class: "category-content",
-                h2 { class: "section-label", "Theme" }
+                h2 { class: "section-label", "Motiv" }
                 div { class: "theme-options",
                     for theme in [Theme::System, Theme::Light, Theme::Dark] {
                         {

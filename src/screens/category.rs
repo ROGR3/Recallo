@@ -82,7 +82,7 @@ pub fn CategoryScreen(
                                 view_mode.set(ViewMode::ByType);
                                 selected_category.set(None);
                             },
-                            "By Type"
+                            "Dle typu"
                         }
                         button {
                             class: if *view_mode.read() == ViewMode::BySection { "view-toggle-btn view-toggle-btn--active" } else { "view-toggle-btn" },
@@ -90,7 +90,7 @@ pub fn CategoryScreen(
                                 view_mode.set(ViewMode::BySection);
                                 selected_category.set(None);
                             },
-                            "By Section"
+                            "Dle sekce"
                         }
                     }
                 }
@@ -101,7 +101,7 @@ pub fn CategoryScreen(
                         button {
                             class: if *entry_type_filter.read() == EntryTypeFilter::Both { "view-toggle-btn view-toggle-btn--active" } else { "view-toggle-btn" },
                             onclick: move |_| entry_type_filter.set(EntryTypeFilter::Both),
-                            "All"
+                            "V\u{0161}e"
                         }
                         button {
                             class: if *entry_type_filter.read() == EntryTypeFilter::DefinitionsOnly { "view-toggle-btn view-toggle-btn--active" } else { "view-toggle-btn" },
@@ -119,9 +119,8 @@ pub fn CategoryScreen(
                 if *view_mode.read() == ViewMode::BySection && is_korean {
                     {render_section_view(subject, selected_category, progress)}
                 } else {
-                    h2 { class: "section-label", "Category" }
+                    h2 { class: "section-label", "Kategorie" }
                     div { class: "category-grid",
-                        // "All" button
                         {
                             let etf = *entry_type_filter.read();
                             let total = data::count_entries(subject, None, etf);
@@ -135,7 +134,7 @@ pub fn CategoryScreen(
                                     },
                                     onclick: move |_| selected_category.set(None),
                                     span { class: "category-emoji", "\u{1f31f}" }
-                                    span { class: "category-name", "All" }
+                                    span { class: "category-name", "V\u{0161}e" }
                                     span { class: "category-count", "{known} / {total}" }
                                 }
                             }
@@ -174,8 +173,8 @@ pub fn CategoryScreen(
                                 div { class: "mastery-bar-fill", style: "width: {pct}%" }
                             }
                             div { class: "mastery-stats",
-                                span { class: "mastery-stat mastery-stat--known", "\u{2713} {known} mastered" }
-                                span { class: "mastery-stat mastery-stat--unknown", "{unknown} to learn" }
+                                span { class: "mastery-stat mastery-stat--known", "\u{2713} {known} um\u{00ed}m" }
+                                span { class: "mastery-stat mastery-stat--unknown", "{unknown} zb\u{00fd}v\u{00e1}" }
                             }
                             if known > 0 {
                                 button {
@@ -187,7 +186,7 @@ pub fn CategoryScreen(
                                             Screen::KnownWords { subject },
                                         );
                                     },
-                                    "View mastered \u{2192}"
+                                    "Zobrazit nau\u{010d}en\u{00e9} \u{2192}"
                                 }
                             }
                         }
@@ -195,7 +194,7 @@ pub fn CategoryScreen(
                 }
 
                 // Filter checkboxes
-                h2 { class: "section-label", "Include words" }
+                h2 { class: "section-label", "Zahrnout" }
                 div { class: "filter-group",
                     label { class: "filter-label",
                         input {
@@ -210,8 +209,8 @@ pub fn CategoryScreen(
                                 }
                             }
                         }
-                        span { "Unknown words" }
-                        span { class: "filter-hint", "(not yet mastered)" }
+                        span { "Nenau\u{010d}en\u{00e9}" }
+                        span { class: "filter-hint", "(je\u{0161}t\u{011b} neum\u{00ed}m)" }
                     }
                     label { class: "filter-label",
                         input {
@@ -226,19 +225,19 @@ pub fn CategoryScreen(
                                 }
                             }
                         }
-                        span { "Known words" }
-                        span { class: "filter-hint", "(already mastered)" }
+                        span { "Nau\u{010d}en\u{00e9}" }
+                        span { class: "filter-hint", "(u\u{017e} um\u{00ed}m)" }
                     }
                 }
 
                 div { class: "word-count-info",
                     if can_start() {
                         span { class: "word-count-ok",
-                            "~{word_count()} words available"
+                            "~{word_count()} ot\u{00e1}zek k dispozici"
                         }
                     } else {
                         span { class: "word-count-warn",
-                            "Not enough words in this selection (min {MIN_WORDS_FOR_GAME})"
+                            "Nedostatek ot\u{00e1}zek (min. {MIN_WORDS_FOR_GAME})"
                         }
                     }
                 }
@@ -261,7 +260,7 @@ pub fn CategoryScreen(
                             navigate(&mut current_screen, &mut history, Screen::ModeSelect { config });
                         }
                     },
-                    "Choose Mode  \u{2192}"
+                    "Zvolit re\u{017e}im  \u{2192}"
                 }
             }
         }
@@ -288,7 +287,7 @@ fn render_section_view(
                         },
                         onclick: move |_| selected_category.set(None),
                         span { class: "category-emoji", "\u{1f31f}" }
-                        span { class: "category-name", "All" }
+                        span { class: "category-name", "V\u{0161}e" }
                         span { class: "category-count", "{known} / {total}" }
                     }
                 }
