@@ -1,32 +1,16 @@
 use crate::data::{word_matches_category, MathEntry, Word, MATH_ENTRIES, WORDS};
 use crate::state::{GameConfig, GameResult, Progress, Screen, Subject, PENALTY_SECONDS};
-use crate::util::{async_sleep_ms, check_typed_answer, time_now_ms};
+use crate::util::{async_sleep_ms, time_now_ms};
 use dioxus::prelude::*;
 use rand::seq::SliceRandom;
 use rand::Rng;
 
 const CHOICES: usize = 4;
-const TYPING_PROBABILITY: f64 = 0.10;
 const FORWARD_PROBABILITY: f64 = 0.50;
 const TIMER_POLL_MS: u64 = 100;
 
 // ── Question model ──────────────────────────────────────────────────────────
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-enum QuestionDirection {
-    /// Korean->English or Name->Statement
-    Forward,
-    /// English->Korean (Korean only)
-    Reverse,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-enum InputMode {
-    MultipleChoice,
-    Typing,
-}
-
-/// A unified question representation for both Korean and Math.
 #[derive(Debug, Clone, PartialEq)]
 struct Question {
     /// Key used for "I know this" tracking
@@ -35,9 +19,8 @@ struct Question {
     prompt: String,
     /// The correct answer text
     correct_answer: String,
-    /// Label above the prompt (e.g. "What does this mean?")
+    /// Label above the prompt
     prompt_label: String,
-    input_mode: InputMode,
     /// All choices (for MC), including the correct one
     choices: Vec<String>,
     /// Index of the correct choice in `choices`
@@ -52,14 +35,6 @@ enum AnswerState {
 }
 
 // ── Question building ───────────────────────────────────────────────────────
-
-fn pick_input_mode(rng: &mut impl Rng) -> InputMode {
-    if rng.gen_bool(TYPING_PROBABILITY) {
-        InputMode::Typing
-    } else {
-        InputMode::MultipleChoice
-    }
-}
 
 fn build_korean_questions(config: &GameConfig, progress: &Progress) -> Vec<Question> {
     let mut rng = rand::thread_rng();
@@ -84,7 +59,6 @@ fn build_korean_questions(config: &GameConfig, progress: &Progress) -> Vec<Quest
         .into_iter()
         .map(|word| {
             let is_forward = rng.gen_bool(FORWARD_PROBABILITY);
-            let input_mode = pick_input_mode(&mut rng);
 
             // Build distractor choices from full word pool
             let distractors: Vec<&'static Word> = WORDS
@@ -124,7 +98,6 @@ fn build_korean_questions(config: &GameConfig, progress: &Progress) -> Vec<Quest
                 prompt,
                 correct_answer,
                 prompt_label,
-                input_mode,
                 choices,
                 correct_index,
             }
@@ -165,8 +138,6 @@ fn build_math_questions(config: &GameConfig, progress: &Progress) -> Vec<Questio
     selected
         .into_iter()
         .map(|entry| {
-            let input_mode = pick_input_mode(&mut rng);
-
             let candidates: Vec<&'static MathEntry> = distractor_pool
                 .iter()
                 .filter(|e| e.name != entry.name && (!hard_mode || e.topic == entry.topic))
@@ -209,7 +180,6 @@ fn build_math_questions(config: &GameConfig, progress: &Progress) -> Vec<Questio
                 prompt: entry.name.to_string(),
                 correct_answer: entry.statement.to_string(),
                 prompt_label,
-                input_mode,
                 choices: choice_entries
                     .iter()
                     .map(|e| e.statement.to_string())
@@ -348,7 +318,6 @@ pub fn GameScreen(
     let mut mistakes: Signal<usize> = use_signal(|| 0);
     let mut penalty_total: Signal<f64> = use_signal(|| 0.0);
     let mut answer_state: Signal<AnswerState> = use_signal(|| AnswerState::Waiting);
-    let mut typing_input: Signal<String> = use_signal(String::new);
     let mut marked_known: Signal<bool> = use_signal(|| false);
     let mut show_penalty: Signal<bool> = use_signal(|| false);
 
@@ -405,7 +374,6 @@ pub fn GameScreen(
     let question = questions.read()[idx].clone();
     let known_key = question.known_key.clone();
     let known_key_mark = question.known_key.clone();
-    let is_typing = question.input_mode == InputMode::Typing;
     let is_answered = *answer_state.read() != AnswerState::Waiting;
 
     let config_for_results = config.clone();
@@ -451,19 +419,11 @@ pub fn GameScreen(
 
             // Answer area
             div { class: "answer-area",
-                if is_typing {
-                    {render_typing_input(
-                        &question, is_answered,
-                        typing_input, paused, accumulated_secs, start_ms,
-                        score, penalty_total, mistakes, show_penalty, answer_state,
-                    )}
-                } else {
-                    {render_multiple_choice(
-                        &question, is_answered, is_math,
-                        paused, accumulated_secs, start_ms,
-                        score, penalty_total, mistakes, show_penalty, answer_state,
-                    )}
-                }
+                {render_multiple_choice(
+                    &question, is_answered, is_math,
+                    paused, accumulated_secs, start_ms,
+                    score, penalty_total, mistakes, show_penalty, answer_state,
+                )}
 
                 // Feedback + post-answer actions
                 if is_answered {
@@ -519,7 +479,6 @@ pub fn GameScreen(
                                     } else {
                                         question_index += 1;
                                         answer_state.set(AnswerState::Waiting);
-                                        typing_input.set(String::new());
                                         marked_known.set(false);
                                         show_penalty.set(false);
                                         resume_timer(&mut paused, &mut start_ms);
@@ -536,61 +495,6 @@ pub fn GameScreen(
 }
 
 // ── Sub-render functions ────────────────────────────────────────────────────
-
-#[allow(clippy::too_many_arguments)]
-fn render_typing_input(
-    question: &Question,
-    is_answered: bool,
-    mut typing_input: Signal<String>,
-    paused: Signal<bool>,
-    accumulated_secs: Signal<f64>,
-    start_ms: Signal<f64>,
-    score: Signal<usize>,
-    penalty_total: Signal<f64>,
-    mistakes: Signal<usize>,
-    show_penalty: Signal<bool>,
-    answer_state: Signal<AnswerState>,
-) -> Element {
-    let correct_key = question.correct_answer.clone();
-    let correct_submit = question.correct_answer.clone();
-
-    rsx! {
-        div { class: "typing-section",
-            input {
-                class: "type-input",
-                r#type: "text",
-                placeholder: "Napi\u{0161} odpov\u{011b}\u{010f}...",
-                value: "{typing_input}",
-                disabled: is_answered,
-                oninput: move |e| typing_input.set(e.value()),
-                onkeydown: move |e: KeyboardEvent| {
-                    if e.key() == Key::Enter && !is_answered {
-                        let is_correct = check_typed_answer(&typing_input.read(), &correct_key);
-                        submit_answer(
-                            is_correct, &correct_key,
-                            paused, accumulated_secs, start_ms,
-                            score, penalty_total, mistakes, show_penalty, answer_state,
-                        );
-                    }
-                }
-            }
-            if !is_answered {
-                button {
-                    class: "submit-btn",
-                    onclick: move |_| {
-                        let is_correct = check_typed_answer(&typing_input.read(), &correct_submit);
-                        submit_answer(
-                            is_correct, &correct_submit,
-                            paused, accumulated_secs, start_ms,
-                            score, penalty_total, mistakes, show_penalty, answer_state,
-                        );
-                    },
-                    "Odeslat"
-                }
-            }
-        }
-    }
-}
 
 #[allow(clippy::too_many_arguments)]
 fn render_multiple_choice(
