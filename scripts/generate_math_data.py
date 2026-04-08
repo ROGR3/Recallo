@@ -9,22 +9,22 @@ JSONS_DIR = os.path.join(os.path.dirname(__file__), "..", "temp_jsons")
 # Mapping: (predmet, otazka) -> (MathTopic variant, display_name, emoji)
 TOPIC_MAP = {
     # Analysis topics
-    ("analyza", 1): ("Matrices", "Matrices", "🔢"),
-    ("analyza", 2): ("Continuity", "Continuity", "📈"),
-    ("analyza", 3): ("Convergence", "Convergence", "🎯"),
-    ("analyza", 4): ("Derivatives", "Derivatives", "📐"),
-    ("analyza", 5): ("Integrals", "Integrals", "∫"),
-    ("analyza", 6): ("Extrema", "Extrema", "⛰️"),
-    ("analyza", 7): ("Graphs", "Graphs", "📊"),
-    ("analyza", 8): ("RandomVariableA", "Random Variable", "🎲"),
+    ("analyza", 1): ("Matrices", "Matice", "🔢"),
+    ("analyza", 2): ("Continuity", "Spojitost", "📈"),
+    ("analyza", 3): ("Convergence", "Konvergence", "🎯"),
+    ("analyza", 4): ("Derivatives", "Derivace", "📐"),
+    ("analyza", 5): ("Integrals", "Integrály", "∫"),
+    ("analyza", 6): ("Extrema", "Extrémy", "⛰️"),
+    ("analyza", 7): ("Graphs", "Grafy", "📊"),
+    ("analyza", 8): ("RandomVariableA", "Náhodná veličina", "🎲"),
     # DataScience/Statistics topics
-    ("statistika", 1): ("Estimation", "Estimation", "📏"),
-    ("statistika", 2): ("RelationshipAnalysis", "Relationship Analysis", "🔗"),
-    ("statistika", 3): ("BayesianInference", "Bayesian Inference", "🧮"),
-    ("statistika", 4): ("Classification", "Classification", "🏷️"),
-    ("statistika", 5): ("RegressionCorrelation", "Regression & Correlation", "📉"),
-    ("statistika", 6): ("ExploratoryAnalysis", "Exploratory Analysis", "🔍"),
-    ("statistika", 7): ("TimeSeries", "Time Series", "⏰"),
+    ("statistika", 1): ("Estimation", "Odhady", "📏"),
+    ("statistika", 2): ("RelationshipAnalysis", "Analýza vztahů", "🔗"),
+    ("statistika", 3): ("BayesianInference", "Bayesovská inference", "🧮"),
+    ("statistika", 4): ("Classification", "Klasifikace", "🏷️"),
+    ("statistika", 5): ("RegressionCorrelation", "Regrese a korelace", "📉"),
+    ("statistika", 6): ("ExploratoryAnalysis", "Průzkumová analýza", "🔍"),
+    ("statistika", 7): ("TimeSeries", "Časové řady", "⏰"),
     ("statistika", 8): ("SupervisedML", "Supervised ML", "🤖"),
 }
 

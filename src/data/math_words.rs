@@ -47,21 +47,21 @@ pub enum MathTopic {
 impl MathTopic {
     pub fn display_name(&self) -> &'static str {
         match self {
-            MathTopic::Matrices => "Matrices",
-            MathTopic::Continuity => "Continuity",
-            MathTopic::Convergence => "Convergence",
-            MathTopic::Derivatives => "Derivatives",
-            MathTopic::Integrals => "Integrals",
-            MathTopic::Extrema => "Extrema",
-            MathTopic::Graphs => "Graphs",
-            MathTopic::RandomVariableA => "Random Variable",
-            MathTopic::Estimation => "Estimation",
-            MathTopic::RelationshipAnalysis => "Relationship Analysis",
-            MathTopic::BayesianInference => "Bayesian Inference",
-            MathTopic::Classification => "Classification",
-            MathTopic::RegressionCorrelation => "Regression & Correlation",
-            MathTopic::ExploratoryAnalysis => "Exploratory Analysis",
-            MathTopic::TimeSeries => "Time Series",
+            MathTopic::Matrices => "Matice",
+            MathTopic::Continuity => "Spojitost",
+            MathTopic::Convergence => "Konvergence",
+            MathTopic::Derivatives => "Derivace",
+            MathTopic::Integrals => "Integrály",
+            MathTopic::Extrema => "Extrémy",
+            MathTopic::Graphs => "Grafy",
+            MathTopic::RandomVariableA => "Náhodná veličina",
+            MathTopic::Estimation => "Odhady",
+            MathTopic::RelationshipAnalysis => "Analýza vztahů",
+            MathTopic::BayesianInference => "Bayesovská inference",
+            MathTopic::Classification => "Klasifikace",
+            MathTopic::RegressionCorrelation => "Regrese a korelace",
+            MathTopic::ExploratoryAnalysis => "Průzkumová analýza",
+            MathTopic::TimeSeries => "Časové řady",
             MathTopic::SupervisedML => "Supervised ML",
         }
     }
@@ -166,7 +166,7 @@ pub struct MathEntry {
 
 pub static MATH_ENTRIES: &[MathEntry] = &[
     // ── DATASCIENCE ────────────────────────────────────────────────────────────
-    // ── Estimation ──
+    // ── Odhady ──
     MathEntry {
         name: "Definice – Náhodný výběr (n-tice nezávislých stejně rozdělených veličin)",
         statement: "n-tice nezávislých náhodných veličin X₁, …, Xₙ, které mají stejné rozdělení jako zkoumaná náhodná veličina X, se nazývá náhodný výběr o rozsahu n z rozdělení náhodné veličiny X.",
@@ -294,7 +294,7 @@ pub static MATH_ENTRIES: &[MathEntry] = &[
         topic: MathTopic::Estimation,
     },
     // ── ANALYSIS ────────────────────────────────────────────────────────────
-    // ── Matrices ──
+    // ── Matice ──
     MathEntry {
         name: "Definice (Řešitelnost soustavy lineárních rovnic)",
         statement: "Systém Ax = b se nazývá řešitelný, jestliže existuje alespoň jedno x* ∈ ℝⁿ takové, že Ax* = b. V opačném případě je soustava neřešitelná.",
@@ -688,7 +688,7 @@ pub static MATH_ENTRIES: &[MathEntry] = &[
         topic: MathTopic::Matrices,
     },
     // ── DATASCIENCE ────────────────────────────────────────────────────────────
-    // ── Relationship Analysis ──
+    // ── Analýza vztahů ──
     MathEntry {
         name: "Definice – Kontingenční tabulka (společné rozdělení dvou kvalitativních znaků)",
         statement: "Kontingenční tabulka zachycuje společné rozdělení dvou kvalitativních znaků X (r variant) a Y (s variant). nᵢⱼ je počet jednotek, pro které X = aᵢ a Y = bⱼ. Marginální četnosti: nᵢ· = Σⱼ nᵢⱼ, n·ⱼ = Σᵢ nᵢⱼ, celkový počet n.",
@@ -844,7 +844,7 @@ pub static MATH_ENTRIES: &[MathEntry] = &[
         topic: MathTopic::RelationshipAnalysis,
     },
     // ── ANALYSIS ────────────────────────────────────────────────────────────
-    // ── Continuity ──
+    // ── Spojitost ──
     MathEntry {
         name: "Definice 5.2 (Funkce definovaná na redukovaném okolí bodu)",
         statement: "Nechť f : ℝ → ℝ, x₀ ∈ ℝ*. Řekneme, že f je definovaná na nějakém R(x₀), jestliže existuje R(x₀) tak, že R(x₀) ⊂ D(f).",
@@ -1224,7 +1224,7 @@ pub static MATH_ENTRIES: &[MathEntry] = &[
         topic: MathTopic::Continuity,
     },
     // ── DATASCIENCE ────────────────────────────────────────────────────────────
-    // ── Bayesian Inference ──
+    // ── Bayesovská inference ──
     MathEntry {
         name: "Věta – Bayesova věta (aktualizace pravděpodobnosti na základě dat)",
         statement: "P(A | B) = P(B | A)·P(A) / P(B), kde jmenovatel P(B) = Σₐ P(B | A = a)·P(A = a) (pravidlo úplné pravděpodobnosti). Pro spojitý případ se suma nahradí integrálem. V kontextu inference: posterior ∝ likelihood × prior.",
@@ -1436,7 +1436,7 @@ pub static MATH_ENTRIES: &[MathEntry] = &[
         topic: MathTopic::BayesianInference,
     },
     // ── ANALYSIS ────────────────────────────────────────────────────────────
-    // ── Convergence ──
+    // ── Konvergence ──
     MathEntry {
         name: "Definice 3.14 (Platí pro skoro všechna n – ∃n₀ ∀n ≥ n₀)",
         statement: "Řekneme, že V(n) platí pro skoro všechna n ∈ ℕ, jestliže ∃n₀ ∈ ℕ ∀n ≥ n₀: V(n).",
@@ -2165,7 +2165,7 @@ pub static MATH_ENTRIES: &[MathEntry] = &[
         subject: MathSubject::Analysis,
         topic: MathTopic::Convergence,
     },
-    // ── Derivatives ──
+    // ── Derivace ──
     MathEntry {
         name: "Definice 6.4 (Derivace funkce v bodě – lim diferenčního podílu)",
         statement: "Funkce f má derivaci v bodě x₀, jestliže existuje limita f'(x₀) = lim(x→x₀) [f(x) − f(x₀)]/(x − x₀) = lim(h→0) [f(x₀+h) − f(x₀)]/h. Je-li f'(x₀) ∈ ℝ, jde o vlastní derivaci; je-li ±∞, jde o nevlastní.",
@@ -2594,7 +2594,7 @@ pub static MATH_ENTRIES: &[MathEntry] = &[
         topic: MathTopic::Derivatives,
     },
     // ── DATASCIENCE ────────────────────────────────────────────────────────────
-    // ── Classification ──
+    // ── Klasifikace ──
     MathEntry {
         name: "Definice – Klasifikační problém (funkce C: ℝᵐ → G, minimalizace chyby)",
         statement: "Nechť x ∈ ℝᵐ je vektor měření nového objektu a G = {1, …, k} je množina skupin. Klasifikátor je funkce C: ℝᵐ → G, která každému objektu přiřadí skupinu: C(x) = ĝ ∈ G. Cílem je minimalizovat pravděpodobnost chybné klasifikace P(C(x) ≠ g).",
@@ -2743,7 +2743,7 @@ pub static MATH_ENTRIES: &[MathEntry] = &[
         topic: MathTopic::Classification,
     },
     // ── ANALYSIS ────────────────────────────────────────────────────────────
-    // ── Integrals ──
+    // ── Integrály ──
     MathEntry {
         name: "Definice 8.1 (Primitivní funkce k f na intervalu I)",
         statement: "Funkce F je primitivní k f na intervalu I, jestliže ∀x ∈ I: F'(x) = f(x).",
@@ -3452,7 +3452,7 @@ pub static MATH_ENTRIES: &[MathEntry] = &[
         topic: MathTopic::Integrals,
     },
     // ── DATASCIENCE ────────────────────────────────────────────────────────────
-    // ── Regression & Correlation ──
+    // ── Regrese a korelace ──
     MathEntry {
         name: "Definice – Kovariance dvou náhodných veličin",
         statement: "Nechť X, Y mají konečné druhé momenty. Kovariance: cov(X, Y) = E[(X − E(X))(Y − E(Y))]. Vlastnosti: cov(X, X) = var(X), symetrie, cov(X, Y) = E(XY) − E(X)E(Y). Jsou-li X, Y nezávislé, pak cov(X, Y) = 0. var(X + Y) = var(X) + var(Y) + 2 cov(X, Y).",
@@ -3587,7 +3587,7 @@ pub static MATH_ENTRIES: &[MathEntry] = &[
         topic: MathTopic::RegressionCorrelation,
     },
     // ── ANALYSIS ────────────────────────────────────────────────────────────
-    // ── Extrema ──
+    // ── Extrémy ──
     MathEntry {
         name: "Definice – Lokální minimum (∃δ-okolí kde f(x*) ≤ f(x))",
         statement: "Bod x* ∈ S je bodem lokálního minima funkce f na S, jestliže ∃δ > 0: f(x*) ≤ f(x) ∀x ∈ S ∩ B(x*, δ). Platí-li ostrá nerovnost pro x ≠ x*, jde o ostré lokální minimum.",
@@ -3960,7 +3960,7 @@ pub static MATH_ENTRIES: &[MathEntry] = &[
         topic: MathTopic::Extrema,
     },
     // ── DATASCIENCE ────────────────────────────────────────────────────────────
-    // ── Exploratory Analysis ──
+    // ── Průzkumová analýza ──
     MathEntry {
         name: "Definice – Mean-centering (sloupcové centrování)",
         statement: "Od každé hodnoty xᵢⱼ se odečte sloupcový průměr x̄ⱼ: xᵢⱼ⁽ᶜ⁾ = xᵢⱼ − x̄ⱼ. Proměnná má poté průměr 0. Vzdálenosti mezi objekty se nemění, těžiště dat se přesune do počátku.",
@@ -4094,7 +4094,7 @@ pub static MATH_ENTRIES: &[MathEntry] = &[
         subject: MathSubject::DataScience,
         topic: MathTopic::ExploratoryAnalysis,
     },
-    // ── Time Series ──
+    // ── Časové řady ──
     MathEntry {
         name: "Definice – Složky časové řady (trend, sezónnost, cyklus, náhodná)",
         statement: "Časovou řadu yₜ rozkládáme na: (1) Trendová složka Tr(t) — dlouhodobý průběh (vzestup/pokles). (2) Sezónní složka Se(t) — periodické odchylky s pevnou periodou (rok, týden). (3) Cyklická složka C(t) — periodické odchylky s proměnlivou délkou periody. (4) Náhodná (reziduální) složka E(t) — nesystematická část.",
@@ -4341,7 +4341,7 @@ pub static MATH_ENTRIES: &[MathEntry] = &[
         topic: MathTopic::TimeSeries,
     },
     // ── ANALYSIS ────────────────────────────────────────────────────────────
-    // ── Graphs ──
+    // ── Grafy ──
     MathEntry {
         name: "Definice – Graf (dvojice G = (U,H) uzlů a hran)",
         statement: "Grafem rozumíme dvojici G = (U, H), kde U je množina uzlů (vrcholů) a H je množina hran. Hranou rozumíme dvojici (u, v), kde u, v ∈ U.",
@@ -4797,7 +4797,7 @@ pub static MATH_ENTRIES: &[MathEntry] = &[
         subject: MathSubject::Analysis,
         topic: MathTopic::Graphs,
     },
-    // ── Random Variable ──
+    // ── Náhodná veličina ──
     MathEntry {
         name: "Definice – Jev (podmnožina A ⊆ Ω)",
         statement: "Nechť Ω je neprázdná množina všech možných výsledků náhodného pokusu. Libovolná podmnožina A ⊆ Ω se nazývá jev. Jednoprvkové podmnožiny jsou elementární jevy.",
