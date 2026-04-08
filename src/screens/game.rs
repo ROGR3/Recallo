@@ -152,7 +152,8 @@ fn build_math_questions(config: &GameConfig, progress: &Progress) -> Vec<Questio
         return vec![];
     }
 
-    // Distractors from the same math subject and entry type
+    let hard_mode = config.hard_mode;
+
     let distractor_pool: Vec<&'static MathEntry> = MATH_ENTRIES
         .iter()
         .filter(|e| e.subject == subject_filter && type_filter.matches(e.entry_type))
@@ -166,14 +167,28 @@ fn build_math_questions(config: &GameConfig, progress: &Progress) -> Vec<Questio
         .map(|entry| {
             let input_mode = pick_input_mode(&mut rng);
 
-            let distractors: Vec<&'static MathEntry> = distractor_pool
+            let candidates: Vec<&'static MathEntry> = distractor_pool
                 .iter()
-                .filter(|e| e.name != entry.name)
-                .cloned()
-                .collect::<Vec<_>>()
-                .choose_multiple(&mut rng, CHOICES - 1)
+                .filter(|e| e.name != entry.name && (!hard_mode || e.topic == entry.topic))
                 .cloned()
                 .collect();
+
+            let distractors: Vec<&'static MathEntry> = if candidates.len() >= CHOICES - 1 {
+                candidates
+                    .choose_multiple(&mut rng, CHOICES - 1)
+                    .cloned()
+                    .collect()
+            } else {
+                // Not enough same-topic distractors, fall back to full pool
+                distractor_pool
+                    .iter()
+                    .filter(|e| e.name != entry.name)
+                    .cloned()
+                    .collect::<Vec<_>>()
+                    .choose_multiple(&mut rng, CHOICES - 1)
+                    .cloned()
+                    .collect()
+            };
 
             let mut choice_entries: Vec<&'static MathEntry> = vec![entry];
             choice_entries.extend(distractors);

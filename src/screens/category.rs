@@ -39,6 +39,7 @@ pub fn CategoryScreen(
     });
     let mut entry_type_filter: Signal<EntryTypeFilter> =
         use_signal(|| EntryTypeFilter::Both);
+    let mut hard_mode: Signal<bool> = use_signal(|| true);
 
     let categories = data::categories_for_subject(subject);
     let is_korean = subject == Subject::Korean;
@@ -95,7 +96,7 @@ pub fn CategoryScreen(
                     }
                 }
 
-                // Entry type filter (math subjects only)
+                // Entry type filter + hard mode (math subjects only)
                 if is_math {
                     div { class: "view-toggle",
                         button {
@@ -112,6 +113,18 @@ pub fn CategoryScreen(
                             class: if *entry_type_filter.read() == EntryTypeFilter::TheoremsOnly { "view-toggle-btn view-toggle-btn--active" } else { "view-toggle-btn" },
                             onclick: move |_| entry_type_filter.set(EntryTypeFilter::TheoremsOnly),
                             "V\u{011b}ty"
+                        }
+                    }
+                    div { class: "view-toggle",
+                        button {
+                            class: if *hard_mode.read() { "view-toggle-btn view-toggle-btn--active" } else { "view-toggle-btn" },
+                            onclick: move |_| hard_mode.set(true),
+                            "Hard"
+                        }
+                        button {
+                            class: if !*hard_mode.read() { "view-toggle-btn view-toggle-btn--active" } else { "view-toggle-btn" },
+                            onclick: move |_| hard_mode.set(false),
+                            "Easy"
                         }
                     }
                 }
@@ -256,6 +269,7 @@ pub fn CategoryScreen(
                                 include_known: filters.read().include_known,
                                 mode: GameMode::Words20,
                                 entry_type_filter: *entry_type_filter.read(),
+                                hard_mode: *hard_mode.read(),
                             };
                             navigate(&mut current_screen, &mut history, Screen::ModeSelect { config });
                         }

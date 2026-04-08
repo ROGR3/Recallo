@@ -141,6 +141,7 @@ pub struct GameConfig {
     pub include_known: bool,
     pub mode: GameMode,
     pub entry_type_filter: EntryTypeFilter,
+    pub hard_mode: bool,
 }
 
 impl GameConfig {
